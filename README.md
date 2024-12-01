@@ -2,14 +2,14 @@
 
 ## Overview
 
-This project analyzes extreme speeding patterns in Toronto using data from the "Mobile Watch Your Speed Program." By visualizing speeding hotspots and identifying trends, this study aims to highlight areas with frequent violations and discuss the implications for road safety and enforcement strategies. The project also explores whether traffic calming measures or enforcement zones effectively reduce extreme speeding incidents.
+This project analyzes extreme speeding patterns in Toronto using data from the [Mobile Watch Your Speed Program](https://open.toronto.ca/dataset/mobile-watch-your-speed-program-speed-summary/) By visualizing speeding hotspots and identifying trends, this study aims to highlight areas with frequent violations and discuss the implications for road safety and enforcement strategies. The project also explores whether traffic calming measures or enforcement zones effectively reduce extreme speeding incidents.
 
 
 ## File Structure
 
 The repository is organized as follows:
 
-- `data/raw_data`: contains the raw data as obtained from FiveThirtyEight, including the simulated data
+- `data/raw_data`: contains the raw data as obtained from OpenDataToronto, including the simulated data
 - `data/analysis_data`: Contains the cleaned data used for analysis and modeling.
 - `models`: Contains the fitted models, including saved models in `.rds` format.
 - `other`: Documents any assistance from ChatGPT-4o and preliminary sketches.
