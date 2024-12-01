@@ -1,9 +1,9 @@
 ---
-title: "My title"
+title: "Chasing Speed Demons: Analyzing Toronto’s Speeding Hotspots and Enforcement Gaps”"
 subtitle: "My subtitle if needed"
 author: 
-  - Rohan Alexander
-thanks: "Code and data are available at: LINK."
+  - Karen Riani
+thanks: "Code and data are available at: https://github.com/karenrni/Analyzing-Torontos-Speeders/."
 date: today
 date-format: long
 abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
