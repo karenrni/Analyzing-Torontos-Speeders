@@ -1,9 +1,8 @@
 #### Preamble ####
 # Purpose: Sanity check of the data
-# Author: Rohan Alexander
-# Date: 19 September 2024
-# Contact: rohan.alexander@utoronto.ca
-# License: MIT
+# Author: Karen Riani
+# Date: 1 December 2024
+# Contact: karen.riani@mail.utoronto.ca
 # Pre-requisites: Need to have simulated data
 # Any other information needed? None.
 

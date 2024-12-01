@@ -1,19 +1,17 @@
 #### Preamble ####
 # Purpose: Simulates data
-# Author: Rohan Alexander
-# Date: 19 September 2024
-# Contact: rohan.alexander@utoronto.ca
-# License: MIT
+# Author: Karen Riani
+# Date: 1 December 2024
+# Contact: karen.riani@mail.utoronto.ca
 # Pre-requisites: None
 # Any other information needed? None
-
 
 #### Workspace setup ####
 library(tidyverse)
 
 
 #### Simulate data ####
-set.seed(304)
+set.seed(777)
 
 # Define the start and end date
 start_date <- as.Date("2018-01-01")

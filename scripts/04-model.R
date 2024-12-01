@@ -1,11 +1,10 @@
 #### Preamble ####
 # Purpose: Models... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Author: Karen Riani
+# Date: 1 December 2024
+# Contact: karen.riani@mail.utoronto.ca
+# Pre-requisites: None
+# Any other information needed? None
 
 
 #### Workspace setup ####
