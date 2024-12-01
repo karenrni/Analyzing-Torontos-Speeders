@@ -10,7 +10,9 @@
 library(tidyverse)
 
 #### Clean data ####
-raw_data <- read_csv("data/raw_data/raw_data.csv")
+raw_data <- read_csv("data/raw_data/WYS_raw_data.csv")
+
+colnames(raw_data)
 
 cleaned_data <-
   raw_data |>
