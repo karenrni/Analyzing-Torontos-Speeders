@@ -81,6 +81,14 @@ distance_threshold <- 500  # Distance in meters
 joined_data <- cams_sf %>%
   st_join(speeds_sf, join = st_is_within_distance, dist = distance_threshold)
 
+# Ensure CRS is set for joined data
+if (is.na(st_crs(joined_data))) {
+  joined_data <- st_set_crs(joined_data, 32617)
+}
+
+# Reproject back to WGS84 for valid longitude and latitude
+joined_data <- st_transform(joined_data, crs = 4326)
+
 # Track school zones without cameras
 joined_data <- joined_data %>%
   mutate(no_camera_in_radius = ifelse(is.na(sign_id), TRUE, FALSE))  # Use `sign_id` to track camera presence
@@ -104,15 +112,19 @@ final_joined_data <- joined_data %>%
   inner_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
 
 #### Step 9: Filter Dates and Select Specific Columns ####
-
-# Filter the data
 final_filtered_data <- final_joined_data %>%
   filter(as.Date(end_date) >= as.Date("2023-01-01"),          # Keep rows with end_date in 2023 or later
          !grepl("^2024", as.character(start_date))) %>%       # Exclude rows with start_date starting with 2024
   select(sign_id, X_id, longitude, latitude,                 # Select relevant columns
-         speed_limit, volume, speed_bin, no_camera_in_radius)
+         speed_limit, volume, speed_bin, no_camera_in_radius) %>%
+  filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
+
+problem_rows <- final_filtered_data %>%
+  filter(
+    longitude <= -80 | longitude >= -78 |
+      latitude <= 43 | latitude >= 44
+  )
+print(problem_rows)
 
 #### Step 10: Save Results ####
-
-# Save the final filtered data as a Parquet file
 arrow::write_parquet(final_filtered_data, "data/analysis_data/analysis_data.parquet")
