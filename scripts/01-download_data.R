@@ -4,7 +4,7 @@
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
 # Pre-requisites: None
-# Any other information needed: As of this date, the API download does not properly load the data and has issues with mismatched column lengths for topics and formats. Thus I provided a secondary option in case it does not work in the future. 
+# Any other information needed: As of this date, the Speed Program API download does not properly load the data and has issues with mismatched column lengths for topics and formats. Thus I provided a secondary option in case it does not work in the future. 
 
 #### Workspace setup ####
 library(opendatatoronto)
@@ -12,23 +12,42 @@ library(tidyverse)
 
 #### Download data ####
 
-### Option 1: Load through direct link to csv
-WYS_raw_data<- read_csv("https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/058236d2-d26e-4622-9665-941b9e7a5229/resource/969583a4-4e9e-44e8-be79-a1b6f1dbd74e/download/WYS%20Mobile%20Sign%20Summary.csv")
+### Speed program data ###
+## OPTION 1: Download csv directly from provided OpenDataToronto link
+speed_data_raw<- read_csv("https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/642efeca-1258-4c23-8e86-d9affca26001/resource/866701b9-9e1f-4c39-92df-e1ec9e20cbbe/download/Stationary%20Sign%20locations%20-%204326.csv")
 
-### Option 2: Load through API (Currently has issues with tibble)
+
+##OPTION 2 (As of this date, this does not work): Download for Developers from OpenDataToronto
 # get package
-package <- show_package("058236d2-d26e-4622-9665-941b9e7a5229")
-package
+packageSpeed <- show_package("642efeca-1258-4c23-8e86-d9affca26001")
+packageSpeed
 
 # get all resources for this package
-resources <- list_package_resources("058236d2-d26e-4622-9665-941b9e7a5229")
+resourcesSpeed <- list_package_resources("642efeca-1258-4c23-8e86-d9affca26001")
 
 # identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
-datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+datastore_resourcesSpeed <- filter(resourcesSpeed, tolower(format) %in% c('csv', 'geojson'))
 
 # load the first datastore resource as a sample
-data <- filter(datastore_resources, row_number()==1) %>% get_resource()
-data
+speed_data_raw <- filter(datastore_resourcesSpeed, row_number()==1) %>% get_resource()
+speed_data_raw
+
+
+### Traffic camera data ###
+# get package
+packageTraffic <- show_package("a3309088-5fd4-4d34-8297-77c8301840ac")
+packageTraffic
+
+# get all resources for this package
+resourcesTraffic <- list_package_resources("a3309088-5fd4-4d34-8297-77c8301840ac")
+
+# identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+datastore_resourcesTraffic <- filter(resourcesTraffic, tolower(format) %in% c('csv', 'geojson'))
+
+# load the first datastore resource as a sample
+camera_data_raw <- filter(datastore_resourcesTraffic, row_number()==1) %>% get_resource()
+camera_data_raw
 
 #### Save data ####
-write_csv(data, "data/raw_data/raw_data.csv")
+write_csv(camera_data_raw, "data/raw_data/raw_data_cameras.csv")
+write_csv(speed_data_raw, "data/raw_data/raw_data_speeds.csv")
