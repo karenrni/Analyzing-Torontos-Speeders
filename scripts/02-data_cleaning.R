@@ -80,13 +80,20 @@ distance_threshold <- 500  # Distance in meters
 joined_data <- cams_sf %>%
   st_join(speeds_sf, join = st_is_within_distance, dist = distance_threshold)
 
-# View joined data
-print(head(joined_data))
-str(joined_data)
+# Track school zones without cameras
+joined_data <- joined_data %>%
+  mutate(no_camera_in_radius = ifelse(is.na(sign_id), TRUE, FALSE))  # Use `sign_id` to track camera presence
 
-#### Step 6: Save results ####
-# Drop the geometry column before saving, not supported by parquet
-joined_data_flat <- st_drop_geometry(joined_data)
+#### Step 6: Convert geometry back into longitude and latitude columns #### 
+joined_data <- joined_data %>%
+  mutate(longitude = st_coordinates(.)[, 1],  # Extract X (longitude)
+         latitude = st_coordinates(.)[, 2]) %>%  # Extract Y (latitude)
+  st_drop_geometry()  # Remove the geometry column
+
+#### Step 7: Remove unnecessary columns #### 
+colnames(joined_data)
+
+#### Step 8: Save results ####
 
 # Save the flattened data as a Parquet file
 arrow::write_parquet(joined_data_flat, "data/analysis_data/analysis_data.parquet")

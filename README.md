@@ -23,3 +23,18 @@ Aspects of the code were written with the help of the ChatGPT-4o, including grap
 ## Data Reproducibility
 
 Due to a known issue of tibble_error_incompatible_size in the column lengths in the topics and formats fields from the opendatatoronto package, the dataset could not be directly downloaded via the API during the project timeline. Alternatively, downloads are available directly from OpenDataToronto's website link.
+
+
+## Handling Large Speed Count Files
+The **School Safety Zone: Watch Your Speed Program Detailed Speed Counts** dataset contains a large number of CSV files, which may be too large to process and store directly in this repository. Instead:
+
+1. **Download Instructions**:
+   - The dataset can be downloaded manually from the [Open Toronto Data Portal](https://open.toronto.ca/dataset/school-safety-zone-watch-your-speed-program-detailed-speed-counts/).
+   - Alternatively, use the code provided in the `01_download_data.R` script to automate the download process.
+
+2. **Combining Files**:
+   - The script in `01_download_data.R` includes the logic to unzip and combine the files into a single dataframe for analysis.
+   - The step `## Step 3: Combine CSV Files ##` includes the necessary code for combining the files using `map_dfr()`.
+
+3. **Repository Constraints**:
+   - Due to file size constraints, the combined dataset is not stored in this repository under data/raw_data. Users must generate it locally by running the provided script.
