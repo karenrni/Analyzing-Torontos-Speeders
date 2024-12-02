@@ -16,6 +16,7 @@ library(sf)
 # Read the raw data
 raw_data_cams <- read_csv("data/raw_data/raw_data_cameras.csv")
 raw_data_speeds <- read_csv("data/raw_data/raw_data_speeds.csv")
+speed_counts_data_raw <- read_csv("data/raw_data/raw_data_speeding_count.csv")
 
 # Check the structure and sample values of the geometry column for cameras
 print(head(raw_data_cams$geometry))
@@ -90,10 +91,28 @@ joined_data <- joined_data %>%
          latitude = st_coordinates(.)[, 2]) %>%  # Extract Y (latitude)
   st_drop_geometry()  # Remove the geometry column
 
-#### Step 7: Remove unnecessary columns #### 
-colnames(joined_data)
+#### Step 7: Use Stratified Random Sampling on Speed Count Data #### 
+speed_counts_data_cleaned <- speed_counts_data_raw %>%
+  select(sign_id, datetime_bin, speed_bin, volume) %>%  # Select relevant columns
+  group_by(sign_id) %>%          # Group by `sign_id`
+  sample_frac(0.01) %>%          # Take 1% per group
+  ungroup()
 
-#### Step 8: Save results ####
+#### Step 8: Join Speed Counts with Joined Camera and Speed data #### 
+# Perform an inner join to ensure no NA values in `sign_id`
+final_joined_data <- joined_data %>%
+  inner_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
 
-# Save the flattened data as a Parquet file
-arrow::write_parquet(joined_data_flat, "data/analysis_data/analysis_data.parquet")
+#### Step 9: Filter Dates and Select Specific Columns ####
+
+# Filter the data
+final_filtered_data <- final_joined_data %>%
+  filter(as.Date(end_date) >= as.Date("2023-01-01"),          # Keep rows with end_date in 2023 or later
+         !grepl("^2024", as.character(start_date))) %>%       # Exclude rows with start_date starting with 2024
+  select(sign_id, X_id, longitude, latitude,                 # Select relevant columns
+         speed_limit, volume, speed_bin, no_camera_in_radius)
+
+#### Step 10: Save Results ####
+
+# Save the final filtered data as a Parquet file
+arrow::write_parquet(final_filtered_data, "data/analysis_data/analysis_data.parquet")
