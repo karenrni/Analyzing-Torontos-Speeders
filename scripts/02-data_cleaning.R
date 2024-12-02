@@ -12,30 +12,40 @@ library(arrow)
 library(sf)
 
 #### Clean data ####
+
 # Read the raw data
 raw_data_cams <- read_csv("data/raw_data/raw_data_cameras.csv")
 raw_data_speeds <- read_csv("data/raw_data/raw_data_speeds.csv")
 
-# Step 1: Remove rows with missing or invalid geometry
-raw_data_cams <- raw_data_cams %>%
-  filter(!is.na(geometry) & str_detect(geometry, "\\[\\[.*\\]\\]"))
+# Check the structure and sample values of the geometry column for cameras
+print(head(raw_data_cams$geometry))
+print(class(raw_data_cams$geometry))
 
-raw_data_speeds <- raw_data_speeds %>%
-  filter(!is.na(geometry) & str_detect(geometry, "\\[\\[.*\\]\\]"))
+#### Step 1: Handle camera data with geometry in c(...) format ####
+extract_camera_coordinates <- function(geometry) {
+  # Remove "c(" and ")" from the string, then split into longitude and latitude
+  coords <- str_remove_all(geometry, "c\\(|\\)") %>%
+    str_split(",\\s*") %>%
+    unlist() %>%
+    as.numeric()
+  tibble(longitude = coords[1], latitude = coords[2])
+}
 
-# Step 2: Parse geometry column to extract coordinates
+# Extract coordinates and create sf object for cameras
+cams_coords <- raw_data_cams %>%
+  filter(!is.na(geometry)) %>%  # Remove rows with missing geometry
+  mutate(extracted = map(geometry, extract_camera_coordinates)) %>%
+  unnest_wider(extracted) %>%  # Expand coordinates into longitude and latitude columns
+  filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
+
+cams_sf <- st_as_sf(cams_coords, coords = c("longitude", "latitude"), crs = 4326)
+
+#### Step 2: Parse geometry column to extract coordinates for speed data ####
 extract_coordinates <- function(geometry) {
   # Use regular expressions to extract the coordinate values from the JSON-like string
   coords <- str_match(geometry, "\\[\\[(-?\\d+\\.\\d+),\\s*(-?\\d+\\.\\d+)\\]\\]")
   tibble(longitude = as.numeric(coords[, 2]), latitude = as.numeric(coords[, 3]))
 }
-
-# Apply extraction to cameras data
-cams_coords <- raw_data_cams %>%
-  filter(!is.na(geometry)) %>%  # Remove rows with missing geometry
-  mutate(extracted = map(geometry, extract_coordinates)) %>%
-  unnest_wider(extracted) %>%
-  filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
 # Apply extraction to speeds data
 speeds_coords <- raw_data_speeds %>%
@@ -44,37 +54,39 @@ speeds_coords <- raw_data_speeds %>%
   unnest_wider(extracted) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
-# Print results for debugging
-print(head(cams_coords))
-print(head(speeds_coords))
-
-# Step 4: Remove duplicates
-
-cams_coords <- cams_coords %>%
-  distinct()
-
-speeds_coords <- speeds_coords %>%
-  distinct()
-
-# Step 5: Filter out outliers based on Toronto's expected range
-cams_coords <- cams_coords %>%
-  filter(longitude > -80 & longitude < -78, latitude > 43 & latitude < 44)
-
-speeds_coords <- speeds_coords %>%
-  filter(longitude > -80 & longitude < -78, latitude > 43 & latitude < 44)
-
-# Step 6: Convert to sf objects using extracted coordinates
-cams_sf <- st_as_sf(cams_coords, coords = c("longitude", "latitude"), crs = 4326)
 speeds_sf <- st_as_sf(speeds_coords, coords = c("longitude", "latitude"), crs = 4326)
 
-# Transform to a projected CRS for accurate distance calculations
-cams_sf <- st_transform(cams_sf, crs = 32617)  # Example: UTM Zone 17N
+#### Step 3: Clean data (Remove duplicates and outliers) ####
+# Remove duplicates
+cams_sf <- cams_sf %>% distinct()
+speeds_sf <- speeds_sf %>% distinct()
+
+# Filter out outliers based on Toronto's approximate longitude and latitude ranges
+cams_sf <- cams_sf %>%
+  filter(st_coordinates(.)[, 1] > -80 & st_coordinates(.)[, 1] < -78 &
+           st_coordinates(.)[, 2] > 43 & st_coordinates(.)[, 2] < 44)
+
+speeds_sf <- speeds_sf %>%
+  filter(st_coordinates(.)[, 1] > -80 & st_coordinates(.)[, 1] < -78 &
+           st_coordinates(.)[, 2] > 43 & st_coordinates(.)[, 2] < 44)
+
+#### Step 4: Transform to a projected CRS ####
+# Transform both datasets to UTM Zone 17N for accurate distance calculations
+cams_sf <- st_transform(cams_sf, crs = 32617)
 speeds_sf <- st_transform(speeds_sf, crs = 32617)
 
-# Perform spatial join within a distance threshold (e.g., 500 meters)
-distance_threshold <- 500  # 500 meters
+#### Step 5: Perform spatial join with a 500m threshold ####
+distance_threshold <- 500  # Distance in meters
 joined_data <- cams_sf %>%
   st_join(speeds_sf, join = st_is_within_distance, dist = distance_threshold)
 
-# Save the resulting spatial object
-write_parquet(joined_data, "data/analysis_data/analysis_data.parquet")
+# View joined data
+print(head(joined_data))
+str(joined_data)
+
+#### Step 6: Save results ####
+# Drop the geometry column before saving, not supported by parquet
+joined_data_flat <- st_drop_geometry(joined_data)
+
+# Save the flattened data as a Parquet file
+arrow::write_parquet(joined_data_flat, "data/analysis_data/analysis_data.parquet")
