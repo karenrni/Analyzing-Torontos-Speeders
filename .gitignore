@@ -45,3 +45,7 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .quarto
+
+data/raw_data/raw_data_speeding_count.csv
+data/raw_data/speed_data/
+data/raw_data/zips/
