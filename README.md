@@ -20,3 +20,7 @@ The repository is organized as follows:
 
 Aspects of the code were written with the help of the ChatGPT-4o, including graphing and some conceptual assistance. It is available in `other/llm_usage`.
 
+## Data Reproducibility
+
+Due to a known issue of tibble_error_incompatible_size in the column lengths in the topics and formats fields from the opendatatoronto package, the dataset could not be directly downloaded via the API during the project timeline. The raw data has been manually downloaded and is stored in the data/raw_data directory. For transparency, the reproducibility script is included in download_data.R, but it may fail due to the API's current limitations.
+
