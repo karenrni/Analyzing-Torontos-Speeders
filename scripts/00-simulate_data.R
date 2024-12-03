@@ -166,4 +166,4 @@ ggplot(ward_speeding_volume, aes(x = factor(ward_no), y = total_speeding_volume,
 
 #### Save Data ####
 
-write_csv(simulated_data, file = "data/raw_data/simulated.csv")
+write_csv(simulated_data, file = "data/simulated_data/simulated.csv")
