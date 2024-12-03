@@ -107,9 +107,9 @@ speed_counts_data_cleaned <- speed_counts_data_raw %>%
   ungroup()
 
 #### Step 8: Join Speed Counts with Joined Camera and Speed data #### 
-# Perform an inner join to ensure no NA values in `sign_id`
+# Perform a left join to include all rows from `joined_data`, even if `sign_id` is NA
 final_joined_data <- joined_data %>%
-  inner_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
+  left_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
 
 #### Step 9: Filter Dates and Select Specific Columns ####
 final_filtered_data <- final_joined_data %>%

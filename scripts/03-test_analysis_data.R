@@ -26,7 +26,7 @@ test_that("Check for valid date ranges", {
 
 test_that("Check for missing values", {
   # Ensure no missing values in critical columns
-  critical_cols <- c("sign_id", "X_id", "longitude", "latitude", "speed_limit", "volume", "speed_bin", "no_camera_in_radius")
+  critical_cols <- c("longitude", "latitude", "speed_limit", "volume", "speed_bin", "no_camera_in_radius")
   expect_true(all(sapply(critical_cols, function(col) !any(is.na(final_filtered_data[[col]])))))
 })
 
