@@ -1,5 +1,5 @@
 #### Preamble ####
-# Purpose: Cleans the raw marriage data into an analysis dataset
+# Purpose: Cleans the raw speed and camera data into an analysis dataset
 # Author: Karen Riani
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
@@ -89,10 +89,6 @@ if (is.na(st_crs(joined_data))) {
 # Reproject back to WGS84 for valid longitude and latitude
 joined_data <- st_transform(joined_data, crs = 4326)
 
-# Track school zones without cameras
-joined_data <- joined_data %>%
-  mutate(no_camera_in_radius = ifelse(is.na(sign_id), TRUE, FALSE))  # Use `sign_id` to track camera presence
-
 #### Step 6: Convert geometry back into longitude and latitude columns #### 
 joined_data <- joined_data %>%
   mutate(longitude = st_coordinates(.)[, 1],  # Extract X (longitude)
@@ -107,33 +103,26 @@ speed_counts_data_cleaned <- speed_counts_data_raw %>%
   ungroup()
 
 #### Step 8: Join Speed Counts with Joined Camera and Speed data #### 
-# Perform a left join to include all rows from `joined_data`, even if `sign_id` is NA
+# Perform an inner join to ensure no NA values in `sign_id`
 final_joined_data <- joined_data %>%
-  left_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
+  inner_join(speed_counts_data_cleaned, by = "sign_id", relationship = "many-to-many")  # Specify many-to-many relationship
 
 #### Step 9: Filter Dates and Select Specific Columns ####
 final_filtered_data <- final_joined_data %>%
   filter(as.Date(end_date) >= as.Date("2023-01-01"),          # Keep rows with end_date in 2023 or later
          !grepl("^2024", as.character(start_date))) %>%       # Exclude rows with start_date starting with 2024
   select(sign_id, X_id, longitude, latitude,                 # Select relevant columns
-         speed_limit, volume, speed_bin, ward_no, no_camera_in_radius) %>%
+         speed_limit, volume, speed_bin, ward_no) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
-critical_cols <- c("speed_limit", "volume", "speed_bin", "no_camera_in_radius")
-
-# Remove rows with NA in critical columns
-final_joined_data <- final_joined_data %>%
-  filter(if_any(all_of(critical_cols), ~ !is.na(.)))
-
-
-# Add a column for the lower end of the speed bin and calculate the amount over the speed limit
+  # Add a column for the lower end of the speed bin and calculate the amount over the speed limit
 final_filtered_data <- final_filtered_data %>%
-  mutate(
-    # Extract the lower bound of the speed bin
-    speed_bin_lower = as.numeric(gsub("\\[|,.*", "", speed_bin)),
-    # Calculate the amount over the speed limit
-    over_speed_limit = pmax(speed_bin_lower - speed_limit, 0)  # Use pmax to ensure no negative values
-  )
+      mutate(
+        # Extract the lower bound of the speed bin
+        speed_bin_lower = as.numeric(gsub("\\[|,.*", "", speed_bin)),
+        # Calculate the amount over the speed limit
+        over_speed_limit = pmax(speed_bin_lower - speed_limit, 0)  # Use pmax to ensure no negative values
+      )
 
 #### Step 10: Save Results ####
 arrow::write_parquet(final_filtered_data, "data/analysis_data/analysis_data.parquet")
