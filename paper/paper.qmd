@@ -10,6 +10,8 @@ abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
 format: pdf
 number-sections: true
 bibliography: references.bib
+toc: true
+fig_caption: yes
 ---
 
 ```{r}
@@ -18,8 +20,6 @@ bibliography: references.bib
 #| message: false
 
 library(tidyverse)
-
-data <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
 
 ```
 
@@ -40,10 +40,6 @@ Some of our data is of penguins (@fig-marriage), from @palmerpenguins.
 #| label: fig-marriage
 #| fig-cap: Bills of penguins
 #| echo: false
-
-data |> 
-  ggplot(aes(x = date, y = marriage_licenses)) +
-  geom_point()
 
 ```
 
@@ -75,9 +71,191 @@ Weaknesses and next steps should also be included.
 
 # Appendix {-}
 
+If you're incorporating feedback to diversify question types and address previous gaps, here’s an improved version of your appendix for Toronto's speeding analysis with a reasonable budget. I'll also ensure it reflects insights from your earlier examples and feedback while incorporating poll aggregation and methodology details.
 
-# Additional data details
+---
 
+# Idealized Survey & Methodology - $500K Budget {#sec-ideal-surv}
+
+## Overview
+This appendix outlines a survey methodology designed to enrich the analysis of excessive speeding near Toronto school zones. With a $500K budget, this approach aims to gather nuanced data from drivers, pedestrians, and community members about speeding behaviors, awareness of enforcement measures, and perceived safety. By integrating observational data with survey insights, this methodology enables robust analysis and informed policy recommendations.
+
+---
+
+## Budget Justification
+# Overview
+
+A $500,000 budget is proposed for analyzing speeding trends in Toronto school zones. Based on similar city-wide traffic safety initiatives, such as Vision Zero and speed enforcement studies, this budget is allocated to account for:
+
+Comprehensive sampling: Targeting diverse demographics and road users.
+
+Advanced recruitment and incentives: Ensuring adequate participation.
+
+High-quality data integration: Focused on cleaning, validation, and geospatial analysis.
+
+# Proportionality
+
+Vision Zero allocates $250,000 to $1,000,000 for focused safety measures annually, making $500,000 appropriate for a targeted study [@citytoronto2024].
+
+# Survey Costs
+
+Recruiting diverse participants typically costs $200,000 to $300,000, ensuring robust and representative data [@pew2023].
+
+---
+
+## Sampling Approach
+### **Target Groups**
+1. **Drivers:**  
+   - Key demographic: Ages 18-40, with emphasis on young male drivers.
+   - Behavioral patterns: Frequent commuters in school zones.
+
+2. **Pedestrians:**  
+   - Parents, school staff, and local residents.
+
+3. **Community Advocates:**  
+   - Stakeholders involved in traffic safety initiatives.
+
+### **Sampling Method**
+**Multi-Stage Sampling:**
+1. **Stratification by Wards:**  
+   - Ensure geographic coverage across all Toronto wards with school zones.  
+2. **Cluster Sampling:**  
+   - Focus on areas near speed cameras and school safety zones.  
+3. **Random Sampling:**  
+   - Within clusters, randomly select participants for unbiased representation.  
+
+**Sample Size Goal:**  
+- **3,000 respondents**: Sufficient to identify trends at the ward level while maintaining a margin of error below ±2%.
+
+---
+
+## Recruitment Strategy
+### **Primary Channels**
+1. **Online Ads:**  
+   - Platforms: TikTok, Instagram, and YouTube.
+   - Geo-targeted to school zones and high-traffic areas.
+   - Budget Allocation: $150,000.
+
+2. **On-the-Ground Recruitment:**  
+   - Flyers distributed in school zones, community centers, and traffic courts.
+   - Budget Allocation: $50,000.
+
+3. **Partnerships with Apps:**  
+   - Collaboration with navigation tools like Waze to deliver in-app survey prompts.
+   - Budget Allocation: $100,000.
+
+4. **Incentives:**  
+   - Monetary rewards: $20 gift cards for completion, with a chance to win larger prizes.
+   - Budget Allocation: $100,000.
+
+---
+
+## Survey Design
+
+### Diversified Question Types
+To address the feedback, the survey incorporates **varied question formats**:
+
+1. **Multiple Choice:**  
+   - Example: "What factors most influence your speed in school zones?"
+     - Time pressure.
+     - Peer behavior.
+     - Lack of awareness of speed limits.
+     - Others.
+
+2. **Likert Scales:**  
+   - Example: "Rate your agreement with: 'Speed cameras make me feel safer in school zones.'"
+     - Strongly disagree to strongly agree.
+
+3. **Open-Ended:**  
+   - Example: "What other measures would help reduce speeding in school zones?"
+
+4. **Ranking Questions:**  
+   - Example: "Rank the following in order of their effectiveness at reducing speeding: speed cameras, visible signage, increased fines, police presence."
+
+5. **Interactive Scenario Questions:**  
+   - Example: "If you saw a speed camera sign but no visible camera, how likely are you to still speed? (Very unlikely to very likely)."
+
+---
+
+### Survey Flow
+1. **Introduction and Consent:**  
+   - Explain the purpose, time required (5-7 minutes), and confidentiality.
+
+2. **Demographics:**  
+   - Age, gender, driving habits, and proximity to school zones.
+
+3. **Behavioral Insights:**  
+   - Driving patterns, awareness of speed limits, and interaction with enforcement measures.
+
+4. **Perceived Effectiveness:**  
+   - Opinions on speed cameras, signage, and enforcement presence.
+
+5. **Safety Concerns:**  
+   - Perceptions of safety in school zones and suggested improvements.
+
+---
+
+## Data Validation
+1. **Logic Checks:**  
+   - Identify inconsistencies (e.g., reporting no awareness of cameras but frequent encounters).  
+
+2. **Cross-Validation:**  
+   - Compare survey responses with observational data (e.g., traffic camera footage and speed counts).  
+
+3. **Geospatial Matching:**  
+   - Integrate survey responses with geospatial data from speed signs and cameras for location-specific analysis.
+
+---
+
+## Poll Aggregation and Modeling
+### **Aggregation Approach**
+A **poll-of-polls method** balances survey insights with observational data:
+- Weight survey responses by:
+  - **Proximity to enforcement measures.**
+  - **Frequency of driving in school zones.**
+- Integrate responses with speed count data to build predictive models of speeding behavior.
+
+### **Modeling Framework**
+- **Dependent Variable:** Likelihood of exceeding speed limits.  
+- **Predictors:**  
+  - Awareness of enforcement measures.  
+  - Demographics (age, gender).  
+  - Self-reported speeding behavior.  
+  - Proximity to cameras and speed signs.
+
+### **Diagnostics**
+- Residual analysis and goodness-of-fit tests to validate model performance.
+- Q-Q plots and distribution checks for robustness.
+
+---
+
+## Budget Breakdown
+
+| **Expense**                     | **Cost Estimate (CAD)**  |
+|----------------------------------|--------------------------|
+| Social Media Recruitment        | $150,000                 |
+| In-App Ads and Recruitment      | $100,000                 |
+| On-the-Ground Recruitment       | $50,000                  |
+| Participant Incentives          | $100,000                 |
+| Data Cleaning and Validation    | $75,000                  |
+| Survey Design and Implementation| $25,000                  |
+| **Total**                       | **$500,000**             |
+
+---
+
+## Appendix Content
+1. **Survey Link:**  
+   [Insert Google Forms Link Here].
+
+2. **Copy of Survey Questions:**  
+   - Include all questions, organized by section.  
+
+3. **Model Diagnostics:**  
+   - Residual plots, fit comparisons, and distribution checks.  
+
+---
+
+This improved version addresses the feedback, diversifies question types, and integrates poll aggregation and modeling. Let me know if you’d like refinements!
 
 
 \newpage
