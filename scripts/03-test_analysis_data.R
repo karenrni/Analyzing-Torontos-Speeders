@@ -76,3 +76,23 @@ test_that("Ensure speed bins are valid and present", {
   expect_true(all(final_filtered_data$speed_bin %in% valid_speed_bins), 
               info = "Invalid or missing speed_bin values found.")
 })
+
+test_that("Check for correctness of over_speed_limit calculation", {
+  # Check if over_speed_limit is non-negative
+  expect_true(all(final_filtered_data$over_speed_limit >= 0), 
+              info = "over_speed_limit contains negative values.")
+  
+  # Check if over_speed_limit matches lower speed_bin - speed_limit for sample rows
+  sample_data <- final_filtered_data %>%
+    slice_sample(n = 10)  # Take 10 random rows for testing
+  
+  sample_data <- sample_data %>%
+    mutate(
+      expected_over_speed_limit = pmax(as.numeric(gsub("\\[|,.*", "", speed_bin)) - speed_limit, 0)
+    )
+  
+  # Ensure calculated and expected values match
+  expect_true(all(sample_data$over_speed_limit == sample_data$expected_over_speed_limit),
+              info = "over_speed_limit calculation does not match expected values.")
+})
+

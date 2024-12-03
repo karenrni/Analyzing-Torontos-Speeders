@@ -119,12 +119,14 @@ final_filtered_data <- final_joined_data %>%
          speed_limit, volume, speed_bin, ward_no, no_camera_in_radius) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
-problem_rows <- final_filtered_data %>%
-  filter(
-    longitude <= -80 | longitude >= -78 |
-      latitude <= 43 | latitude >= 44
+# Add a column for the lower end of the speed bin and calculate the amount over the speed limit
+final_filtered_data <- final_filtered_data %>%
+  mutate(
+    # Extract the lower bound of the speed bin
+    speed_bin_lower = as.numeric(gsub("\\[|,.*", "", speed_bin)),
+    # Calculate the amount over the speed limit
+    over_speed_limit = pmax(speed_bin_lower - speed_limit, 0)  # Use pmax to ensure no negative values
   )
-print(problem_rows)
 
 #### Step 10: Save Results ####
 arrow::write_parquet(final_filtered_data, "data/analysis_data/analysis_data.parquet")
