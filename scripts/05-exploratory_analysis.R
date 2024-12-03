@@ -14,7 +14,7 @@ library(corrplot)
 
 #### Test data ####
 
-# Load the cleaned dataset
+# Load the datasets
 final_filtered_data <- arrow::read_parquet("data/analysis_data/analysis_data.parquet")
 
 # Plot proportion of general speeding across wards
@@ -82,7 +82,6 @@ ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_speeding, fill 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
                                      
 
-
 # Interactive map of speeding incidents
 leaflet(final_filtered_data %>% filter(speeding == 1)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
@@ -133,3 +132,24 @@ ggplot(heatmap_data, aes(x = factor(ward_no), y = over_speed_limit, fill = total
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid = element_blank()
   )
+
+### Explore camera density per ward
+camera_density <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(cameras_nearby = n_distinct(X_id), .groups = "drop")
+
+ward_speed_analysis <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(
+    avg_speed_over_limit = mean(over_speed_limit, na.rm = TRUE),
+    cameras_nearby = n_distinct(X_id),
+    .groups = "drop"
+  )
+
+ggplot(ward_speed_analysis, aes(x = cameras_nearby, y = avg_speed_over_limit)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Camera Density vs. Speeding Behavior",
+       x = "Number of Cameras Nearby",
+       y = "Average Speed Over Limit")
+

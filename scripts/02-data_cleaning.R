@@ -4,7 +4,7 @@
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
 # Pre-requisites: Need to have downloaded the data in 01-dornload_data.R script
-# Any other information needed? None.
+# Any other information needed? Camera-related variables, such as camera density or proximity, were not included in the main data-cleaning pipeline as they were found to be highly correlated with ward_no due to the spatial join process. These variables are explored separately in the model and exploratory analysis scripts to assess their utility
 
 #### Workspace setup ####
 library(tidyverse)
@@ -115,7 +115,7 @@ final_filtered_data <- final_joined_data %>%
          speed_limit, volume, speed_bin, ward_no) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
-  # Add a column for the lower end of the speed bin and calculate the amount over the speed limit
+# Add a column for the lower end of the speed bin and calculate the amount over the speed limit
 final_filtered_data <- final_filtered_data %>%
       mutate(
         # Extract the lower bound of the speed bin
