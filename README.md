@@ -34,10 +34,8 @@ The **School Safety Zone: Watch Your Speed Program Detailed Speed Counts** datas
 
 3. **Repository Constraints**:
    - Due to file size constraints, the combined dataset is not stored in this repository under data/raw_data. Users must generate it locally by running the provided script.
+   
 ## Statement on LLM usage
 
 Aspects of the code were written with the help of the ChatGPT-4o, including graphing, debugging, and some conceptual assistance. It is available in `other/llm_usage`.
 
-## Statement on LLM usage
-
-Aspects of the code were written with the help of the ChatGPT-4o, including graphing, debugging, and some conceptual assistance. It is available in `other/llm_usage`.
