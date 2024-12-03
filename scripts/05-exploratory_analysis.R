@@ -57,7 +57,8 @@ summary_stats <- final_filtered_data %>%
 # Display summary
 summary_stats
 
-# Model Summary
+# General Summary
+summary(final_filtered_data)
 
 # Summarize speeding and extreme speeding by ward
 ward_speeding_summary <- final_filtered_data %>%

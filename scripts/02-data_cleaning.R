@@ -119,6 +119,13 @@ final_filtered_data <- final_joined_data %>%
          speed_limit, volume, speed_bin, ward_no, no_camera_in_radius) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
+critical_cols <- c("speed_limit", "volume", "speed_bin", "no_camera_in_radius")
+
+# Remove rows with NA in critical columns
+final_joined_data <- final_joined_data %>%
+  filter(if_any(all_of(critical_cols), ~ !is.na(.)))
+
+
 # Add a column for the lower end of the speed bin and calculate the amount over the speed limit
 final_filtered_data <- final_filtered_data %>%
   mutate(
