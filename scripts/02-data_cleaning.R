@@ -116,7 +116,7 @@ final_filtered_data <- final_joined_data %>%
   filter(as.Date(end_date) >= as.Date("2023-01-01"),          # Keep rows with end_date in 2023 or later
          !grepl("^2024", as.character(start_date))) %>%       # Exclude rows with start_date starting with 2024
   select(sign_id, X_id, longitude, latitude,                 # Select relevant columns
-         speed_limit, volume, speed_bin, no_camera_in_radius) %>%
+         speed_limit, volume, speed_bin, ward_no, no_camera_in_radius) %>%
   filter(!is.na(longitude) & !is.na(latitude))  # Remove rows with missing coordinates
 
 problem_rows <- final_filtered_data %>%
