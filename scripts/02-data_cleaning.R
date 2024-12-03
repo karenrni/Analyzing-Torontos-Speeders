@@ -3,7 +3,7 @@
 # Author: Karen Riani
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
-# Pre-requisites: Need to have downloaded the data
+# Pre-requisites: Need to have downloaded the data in 01-dornload_data.R script
 # Any other information needed? None.
 
 #### Workspace setup ####

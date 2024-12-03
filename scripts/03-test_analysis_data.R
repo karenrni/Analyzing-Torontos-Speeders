@@ -3,7 +3,7 @@
 # Author: Karen Riani
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
-# Pre-requisites: Run 03-clean_data.R script
+# Pre-requisites: Run 02-data_cleaning.R script
 # Any other information needed? None.
 
 #### Workspace setup ####
