@@ -21,45 +21,47 @@ speed_bins <- c("[55,60)", "[10,15)", "[35,40)", "[30,35)", "[15,20)", "[85,90)"
 
 # Custom probabilities for speed bins
 speed_bin_probabilities <- c(
-  "[55,60)" = 0.12,
+  "[55,60)" = 0.15,
   "[10,15)" = 0.10,
   "[35,40)" = 0.10,
   "[30,35)" = 0.10,
   "[15,20)" = 0.10,
-  "[85,90)" = 0.01,  # Extremely unlikely
-  "[25,30)" = 0.10,
+  "[85,90)" = 0.002,   # Rare high-speed bin, ≤ 0.3%
+  "[25,30)" = 0.12,
   "[60,65)" = 0.12,
   "[40,45)" = 0.12,
   "[5,10)" = 0.08,
-  "[100,)" = 0.005,  # Rare extreme speeds
+  "[100,)" = 0.001,    # Extremely rare, ≤ 0.1%
   "[50,55)" = 0.12,
   "[45,50)" = 0.12,
   "[20,25)" = 0.10,
-  "[75,80)" = 0.03,  # Less likely
-  "[80,85)" = 0.02,  # Less likely
-  "[90,95)" = 0.005, # Extremely unlikely
-  "[95,100)" = 0.005, # Extremely unlikely
-  "[70,75)" = 0.05,  # Less likely
+  "[75,80)" = 0.02,    # Moderately rare
+  "[80,85)" = 0.003,   # Moderately rare, ≤ 0.3%
+  "[90,95)" = 0.001,   # Very rare
+  "[95,100)" = 0.0005, # Very rare
+  "[70,75)" = 0.005,
   "[65,70)" = 0.08
 )
 
 # Normalize probabilities (to ensure they sum to 1)
 speed_bin_probabilities <- speed_bin_probabilities / sum(speed_bin_probabilities)
-ward_probabilities <- runif(length(wards), 0.1, 0.3)  # Probability of high-speed bins by ward
+
+# Generate ward probabilities using a Beta distribution skewed towards lower values
+ward_probabilities <- rbeta(length(wards), shape1 = 2, shape2 = 8) * 0.2  # Scale to max 0.2
 
 # Number of observations
 num_observations <- 5000  
 
 # Simulate data
 simulated_data <- tibble(
-  sign_id = sample(unique(final_filtered_data$sign_id), num_observations, replace = TRUE),  # Random sign IDs
-  X_id = sample(unique(final_filtered_data$X_id), num_observations, replace = TRUE),  # Random camera IDs
+  sign_id = sample(1:500, num_observations, replace = TRUE),  # Random sign IDs
+  X_id = sample(1:100, num_observations, replace = TRUE),  # Random camera IDs
   ward_no = sample(wards, num_observations, replace = TRUE),  # Random wards
   longitude = runif(num_observations, -79.65, -79.0),  # Toronto longitude range
   latitude = runif(num_observations, 43.6, 43.8),  # Toronto latitude range
   speed_limit = sample(c(30, 40, 50, 60), num_observations, replace = TRUE),  # Common speed limits
   volume = sample(1:100, num_observations, replace = TRUE),  # Traffic volume
-  speed_bin = sample(speed_bins, num_observations, replace = TRUE),  # Initial speed bins
+  speed_bin = sample(names(speed_bin_probabilities), num_observations, replace = TRUE, prob = speed_bin_probabilities),  # Speed bins
   no_camera_in_radius = sample(c(TRUE, FALSE), num_observations, replace = TRUE, prob = c(0.3, 0.7))  # Camera presence
 )
 
@@ -68,13 +70,14 @@ ward_adjustments <- tibble(ward_no = wards, prob_high_speed = ward_probabilities
 simulated_data <- simulated_data %>%
   left_join(ward_adjustments, by = "ward_no") %>%
   mutate(
-    speed_bin = ifelse(runif(n()) < prob_high_speed, "[85,90)", speed_bin)  # Assign higher speed bins in specific wards
+    speed_bin = ifelse(runif(n()) < prob_high_speed & speed_bin %in% c("[85,90)", "[90,95)", "[95,100)", "[100,)"),
+                       "[85,90)", speed_bin)  # Increase likelihood of `[85,90)` for specific wards
   )
 
-# Introduce outliers (e.g., extreme speeds in rare cases)
+# Introduce extreme outliers sparingly
 simulated_data <- simulated_data %>%
   mutate(
-    speed_bin = ifelse(runif(n()) < 0.01, "[100,)", speed_bin)  # Add 1% extreme speeding cases
+    speed_bin = ifelse(runif(n()) < 0.001, "[100,)", speed_bin)  # Add 0.1% extreme speeding cases globally
   )
 
 #### Plots ####

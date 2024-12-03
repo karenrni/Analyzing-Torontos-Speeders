@@ -53,3 +53,26 @@ test_that("Verify `no_camera_in_radius` logic", {
   # Ensure `no_camera_in_radius` is TRUE only when `sign_id` is NA
   expect_true(all(final_filtered_data$no_camera_in_radius == is.na(final_filtered_data$sign_id)))
 })
+
+test_that("Check for proportion of extreme speed bins", {
+  extreme_speeds <- final_filtered_data %>%
+    filter(speed_bin == "[100,)")
+  expect_true(nrow(extreme_speeds) / nrow(final_filtered_data) <= 0.01, 
+              info = "Extreme speed bins exceed 1% of the data.")
+  
+  high_speed_bins <- c("[85,90)", "[90,95)", "[95,100)")
+  high_speed_proportion <- final_filtered_data %>%
+    filter(speed_bin %in% high_speed_bins) %>%
+    nrow() / nrow(final_filtered_data)
+  expect_true(high_speed_proportion < 0.03, 
+              info = "High-speed bins exceed 3% of the data.")
+})
+
+test_that("Ensure speed bins are valid and present", {
+  valid_speed_bins <- c("[55,60)", "[10,15)", "[35,40)", "[30,35)", "[15,20)", 
+                        "[85,90)", "[25,30)", "[60,65)", "[40,45)", "[5,10)", 
+                        "[100,)", "[50,55)", "[45,50)", "[20,25)", "[75,80)", 
+                        "[80,85)", "[90,95)", "[95,100)", "[70,75)", "[65,70)")
+  expect_true(all(final_filtered_data$speed_bin %in% valid_speed_bins), 
+              info = "Invalid or missing speed_bin values found.")
+})
