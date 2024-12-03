@@ -18,7 +18,7 @@ The repository is organized as follows:
 
 ## Statement on LLM usage
 
-Aspects of the code were written with the help of the ChatGPT-4o, including graphing and some conceptual assistance. It is available in `other/llm_usage`.
+Aspects of the code were written with the help of the ChatGPT-4o, including graphing, debugging, and some conceptual assistance. It is available in `other/llm_usage`.
 
 ## Data Reproducibility
 
