@@ -35,9 +35,9 @@ Toronto's battle against speeding takes some wild turns—literally and figurati
 
 The rise of advanced vehicle technology and the adrenaline appeal of street racing exacerbate these issues, with young male drivers (18–25 years) disproportionately represented in this trend. Though rare at **0.9% prevalence**, street racing poses a **five-fold increase in crash risk (OR = 5.23, p < .001)**, even after accounting for other risk factors [@simonsmorton2017]. Despite Ontario’s strict penalties, such as **$10,000 fines** and **30-day license suspensions for excessive speeding**, enforcement alone has not fully addressed these challenges [@trafficparalegal2024]. Recent headlines, such as a driver clocked at **102 km/h in a 50 km/h school zone** and a Toronto speed camera being destroyed less than 24 hours after reinstallation, underscore the disconnect between enforcement measures and public behavior [@citynews2024; @cbc2023].
 
-This paper focuses on understanding **over_speed_limit**, the amount by which speeds in each observed speed bin exceed the posted speed limit. This dependent variable is calculated as the difference between the lower bound of the observed speed bin and the speed limit, ensuring a straightforward measure of speeding severity. By quantifying how far drivers exceed the limit, over_speed_limit allows for identifying patterns of high-risk speeding behaviour. Using open data from Toronto's School Safety Zone Watch Your Speed Program, Watch Your Speed Detailed Counts, and Traffic Camera datasets, including vehicle counts (volume) in each speed bin, speed limits, and ward-level identifiers, this study investigates how traffic patterns, enforcement mechanisms, and geographic factors contribute to variations in speeding behaviour across the city.
+This paper focuses on understanding the estimand **over_speed_limit**, the amount by which speeds in each observed speed bin exceed the posted speed limit. This dependent variable is calculated as the difference between the lower bound of the observed speed bin and the speed limit, ensuring a straightforward measure of speeding severity. By quantifying how far drivers exceed the limit, over_speed_limit allows for identifying patterns of high-risk speeding behaviour. Using open data from Toronto's School Safety Zone Watch Your Speed Program, Watch Your Speed Detailed Counts, and Traffic Camera datasets, including vehicle counts (volume) in each speed bin, speed limits, and ward-level identifiers, this study investigates how traffic patterns, enforcement mechanisms, and geographic factors contribute to variations in speeding behaviour across the city.
 
-To address this, the study employs multi-linear regression models to examine the relationship between excess speed and predictors such as traffic volume, speed limits, and ward characteristics. Results indicate that higher traffic volume reduces excess speed by **0.12 km/h per additional vehicle**, while speed limits positively influence speeding by **0.13 km/h per unit increase**. Wards exhibit substantial variability, with some, such as Ward 4, showing significant decreases in speeding. However, the impact of individual speed cameras was negligible, suggesting limitations in the data and methodology for evaluating camera-specific effects.
+To address this, the study employs multi-linear regression models to examine the relationship between excess speed and predictors such as traffic volume, speed limits, and ward characteristics throughout 2023. Results indicate that higher traffic volume reduces excess speed by **0.12 km/h per additional vehicle**, while speed limits positively influence speeding by **0.13 km/h per unit increase**. Wards exhibit substantial variability, with some, such as Ward 4, showing significant decreases in speeding. However, the impact of individual speed cameras was negligible, suggesting limitations in the data and methodology for evaluating camera-specific effects.
 
 The rest of this paper is structured as follows:  @sec-mydatasection presents the data sources and methodology, @sec-mymodel presents the forecasting model, then  @sec-myresults followed by  @sec-mydisc, which discusses the results and their implications.  @sec-mylimits concludes with a discussion of the limitations of the study and suggestions for future research, followed by Appendix @sec-ideal-surv with a budgeted idealized survey and methodology.
 
@@ -46,46 +46,41 @@ The rest of this paper is structured as follows:  @sec-mydatasection presents th
 # Data {#sec-mydatasection}
 
 ## Overview
-The data for this analysis is sourced from Open Data Toronto and comprises three datasets: School Safety Zone Watch Your Speed Program – Locations [@schoolzonelocations], School Safety Zone Watch Your Speed Program – Detailed Speed Counts [@schoolzonespeeds], and the Traffic Camera dataset  [@trafficcameras]. These datasets provide detailed insights into speeding behavior, traffic enforcement mechanisms, and geographic characteristics within Toronto. All data analysis was performed using R [@citeR], employing a variety of packages to ensure robust and reproducible workflows.
+The data for this analysis is sourced from Open Data Toronto [@opendatatoronto] and comprises three datasets: School Safety Zone Watch Your Speed Program – Locations [@schoolzonelocations], School Safety Zone Watch Your Speed Program – Detailed Speed Counts in 2023 [@schoolzonespeeds], and the Traffic Camera dataset  [@trafficcameras]. These datasets provide detailed insights into speeding behavior, traffic enforcement mechanisms, and geographic characteristics within Toronto. The traffic camera and speed sign data were merged through a spacial join with a range of 500m using geographical coordinates. This was joined with the detailed counts of speeds through Toronto ward number (25 ward structure). 
 
 ## Packages Used
 The analysis utilized R [@citeR] with the following packages: `opendatatoronto` [@opendatatoronto], `tidyverse` [@tidyverse], `janitor` [@janitor], `arrow` [@arrow], `readr` [@readr], `sf` [@sfpackage], `testthat` [@testthat], `ggplot2` [@ggplot2_wickham_2016], `corrplot` [@corrplot], `tidymodels` [@tidymodels], `kableExtra` [@kableExtra] and `rstanarm` [@rstanarm].
 
-## Measurement and Limitations
+## Measurement 
 
 The datasets from Open Data Toronto serve as the foundation for analyzing speeding behavior in Toronto. Each variable is derived from real-world phenomena and represents a specific aspect of traffic patterns or enforcement mechanisms:
 
-1. **Over Speed Limit**: This key dependent variable quantifies the extent to which drivers exceed posted speed limits. It is derived by calculating the difference between the midpoint of the observed speed bin (e.g., `[45,50)` translates to a midpoint of 47.5 km/h) and the posted speed limit. This method provides a nuanced measure of speeding severity, distinguishing between minor infractions and extreme violations.
+- **Over Speed Limit**: This key dependent variable quantifies the extent to which drivers exceed posted speed limits. It is derived by calculating the difference between the midpoint of the observed speed bin (e.g., `[45,50)` translates to a midpoint of 47.5 km/h) and the posted speed limit. This method provides a nuanced measure of speeding severity, distinguishing between minor infractions and extreme violations.
 
-2. **No Camera in Radius**: This binary variable was constructed based on spatial joins between speed observation data and camera locations. If a given location fell outside the defined radius of nearby cameras, it was flagged as `TRUE`. This captures the absence of enforcement presence and allows for an analysis of its influence on speeding behavior.
+- **Sign ID and Camera ID (X_id)**: These unique identifiers represent speed cameras and their locations, facilitating the mapping of speeding patterns to enforcement points. However, sign addresses may not always align precisely with camera placements, as discussed in the limitations section.
 
-3. **Camera Density**: To represent enforcement intensity across wards, the number of cameras was aggregated per ward. This variable offers insight into how concentrated enforcement might correlate with traffic patterns or speeding violations.
+- **Longitude and Latitude**: Geographic coordinates capturing the locations of observed speeding behaviour, allowing for spatial analysis and the identification of high-risk zones.
 
-4. **Traffic Volume**: This variable directly records the number of vehicles observed at a specific location within a given speed bin and time interval. It is included in the datasets as raw counts, reflecting real-time traffic flow.
+- **Speed Limit**: The posted speed limits for each location, ranging from 30 km/h to 50 km/h, with an average of 38.24 km/h. This variable provides the baseline against which speeding is measured.
 
-5. **Speed Limit**: This variable is a direct measure of the posted speed regulations at specific locations. Data entries were validated against known regulations to ensure accuracy.
+- **Volume**: The count of vehicles observed in a given speed bin, representing traffic density. Median volume is 13 vehicles, with counts ranging widely, up to a maximum of 209 vehicles. 
 
-6. **Ward Number**: A categorical representation of Toronto’s geographic divisions, this variable contextualizes speeding behavior within specific zones. Each ward entry corresponds to a specific administrative boundary, linking observed behaviors to broader urban planning and enforcement efforts.
+- **Speed Bin**: Recorded ranges of observed speeds, such as `[45,50)`, provide context for speed categories, assuming uniform speed distributions within each bin.
 
-### Data Transformation and Limitations
-The process of moving from real-world observations to dataset entries involves several key transformations:
+- **Ward Number**: Geographic zones represented as categorical identifiers, reflecting administrative boundaries within Toronto. For instance, Ward 10 accounts for 28.8% of observations, making it the most represented ward, while Ward 19 has considerably fewer observations.
 
-- **Spatial Joins**: Camera locations (latitude and longitude) were mapped against speed observation points to identify enforcement presence.
+- **No Camera in Radius**: This binary variable was constructed based on spatial joins between speed observation data and camera locations. If a given location fell outside the defined radius of nearby cameras, it was flagged as `TRUE`. This captures the absence of enforcement presence and allows for an analysis of its influence on speeding behavior.
 
-- **Calculated Variables**: Metrics like over speed limit and camera density were derived from raw data, enabling a more analytical exploration of speeding patterns.
+- **Camera Density**: To represent enforcement intensity across wards, the number of cameras was aggregated per ward. This variable offers insight into how concentrated enforcement might correlate with traffic patterns or speeding violations.
 
-Despite these transformations, limitations exist. Speed bin midpoints assume a uniform speed distribution within each bin, which may not reflect reality. Additionally, camera placements are biased toward high-traffic or high-risk areas, potentially underrepresenting quieter zones. These factors necessitate caution when interpreting results, as the dataset captures a snapshot rather than a complete picture of traffic behavior.
+## Data Limitations
 
-## Variables of Interest
-The dataset includes several critical variables relevant to speeding behavior:
+The datasets used in this study have notable limitations that must be acknowledged. **Sign addresses** in the datasets have not been verified and may represent the address of an adjacent property rather than the actual location of the sign. The **speed limit** column reflects the most recent operating parameter, which does not necessarily align with the current or previous speed limits for each location.
 
-- **Sign ID and Camera ID (X_id)**: Unique identifiers for speed cameras and their locations, enabling the association of speeding patterns with enforcement points.
-- **Longitude and Latitude**: Geographic coordinates capturing the location of observed speeding behavior.
-- **Speed Limit**: Posted speed limits for each location, ranging from 30 km/h to 50 km/h, with an average of 38.24 km/h.
-- **Volume**: The number of vehicles observed in a given speed bin. The median volume is 13 vehicles, but counts range widely, with a maximum of 209 vehicles.
-- **Speed Bin**: Recorded ranges of observed speeds, such as `[45,50)`, providing context for speed categories.
-- **Ward Number**: Geographic zones represented by categorical identifiers. Ward 10 had the highest representation in the data (28.8% of observations), while Ward 19 had significantly fewer observations.
-- **Over Speed Limit**: A calculated variable representing the extent to which observed speeds exceed posted limits. This variable allows for a nuanced exploration of speeding severity, with a mean value of 3.91 km/h and a maximum of 70 km/h.
+The **Traffic Cameras** dataset is highly up-to-date, with a last refresh on 2024-11-26. While there are no issues with accessibility or completeness, usability is constrained by unclear column names and incomplete metadata. Conversely, the **School Safety Zone Watch Your Speed Program – Detailed Speed Counts** dataset is over 12 months outdated, requiring reliance on direct CSV links for access. This reduces its applicability for analysing current traffic trends.
+
+To address gaps, **spatial joins** were employed to map camera locations to speed observation points, identifying enforcement presence, and **calculated variables**, such as over speed limit and camera density, were derived to facilitate analysis. However, these transformations have limitations. Speed bin ranges assume a uniform speed distribution, which may not capture the variability in driver behaviours. Furthermore, camera placements are concentrated in high-traffic or high-risk areas, potentially underrepresenting quieter zones. Together, these factors highlight the need for caution when interpreting results, as the datasets provide a snapshot rather than a comprehensive depiction of traffic behaviour.
+
 
 ## Descriptive Statistics
 Descriptive statistics in [@tbl-summary] highlight critical patterns within the data:
@@ -123,13 +118,151 @@ summary_data %>%
   column_spec(1, bold = TRUE, width = "10em") %>%
   row_spec(0, bold = TRUE)
 
+```
+
+```{r}
+#| label: fig-heatbar
+#| fig-cap: Number of Vehicles Exceeding Speed Limits by Ward
+#| echo: false
+
+# Summarize over speeding by ward
+ward_speeding_summary <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(
+    total_over_speeding = sum(over_speed_limit > 0, na.rm = TRUE),
+    avg_over_speeding = mean(over_speed_limit[over_speed_limit > 0], na.rm = TRUE)
+  )
+
+# Plot total over speeding by ward
+ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_over_speeding, fill = total_over_speeding)) +
+  geom_col() +
+  scale_fill_gradient(low = "yellow", high = "red") +
+  labs(
+    x = "Ward Number",
+    y = "Total Over Speeding Incidents",
+    fill = "Over Speeding Volume"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+#| label: fig-cam-dens
+#| fig-cap: Camera Density vs. Speeding Behavior
+#| echo: false
 
 
+### Explore camera density per ward
+camera_density <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(cameras_nearby = n_distinct(X_id), .groups = "drop")
+
+ward_speed_analysis <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(
+    avg_speed_over_limit = mean(over_speed_limit, na.rm = TRUE),
+    cameras_nearby = n_distinct(X_id),
+    .groups = "drop"
+  )
+
+ggplot(ward_speed_analysis, aes(x = cameras_nearby, y = avg_speed_over_limit)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+       x = "Number of Cameras Nearby",
+       y = "Average Speed Over Limit")
+
+```
+
+```{r}
+#| label: fig-heatmap1
+#| fig-cap: Speeding Volume by Ward and Over Speed Limit
+#| echo: false
+
+# Aggregate data for heatmap
+heatmap_data <- final_filtered_data %>%
+  group_by(ward_no, over_speed_limit) %>%
+  summarize(total_volume = sum(volume, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create the heatmap
+ggplot(heatmap_data, aes(x = factor(ward_no), y = over_speed_limit, fill = total_volume)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "red", name = "Total Volume") +
+  labs(
+    x = "Ward Number",
+    y = "Over Speed Limit (km/h)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
 ```
 
 # Model {#sec-mymodel}
 
+## Overview
+
+This section outlines the modeling process used to analyze over-speeding behavior based on data from Toronto’s School Safety Zone Watch Your Speed Program and Traffic Cameras datasets. The goal was to predict the extent to which observed speeds exceeded posted limits (over_speed_limit) by evaluating various predictors. Three models were developed and assessed using performance metrics, including RMSE, MAE, and \( R^2 \), to determine the most appropriate model. The final model selection was based on its balance between simplicity, accuracy, and interpretability.
+
+## Model Structure
+
+
+Common Variables Across All Models:
+
+- Speed Limit (x₁): Posted speed limit at a given location.
+
+- Volume (x₂): Number of vehicles observed in a speed bin.
+
+Model-Specific Variables:
+
+- Model 1: Includes ward-level categorical effects (ward_no) to account for geographic differences in speeding behavior.
+
+- Model 2: Omits ward-level effects to focus solely on speed limits and vehicle volumes.
+
+- Model 3: Adds a camera identifier (Xₓᵢd) to examine the influence of specific camera locations on speeding patterns.
+
+#### Model Formulations
+
+1. Model 1: Full Model with Ward-Level Effects
+   \[
+   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \sum_{j=1}^{13} \beta_{3j} \text{ward\_no}_j + \epsilon
+   \]
+
+2. Model 2: Excluding Ward-Level Effects
+   \[
+   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \epsilon
+   \]
+
+3. Model 3: Including Camera Identifiers
+   \[
+   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \sum_{j=1}^{13} \beta_{3j} \text{ward\_no}_j + \beta_4 X_{id} + \epsilon
+   \]
+
+
+## Variable Selection and Final Model
+
+The selection process aimed to balance complexity and explanatory power. Ward-level effects were included to capture geographic variations, while Camera Identifiers were tested to evaluate their influence. Redundant variables were excluded to maintain simplicity. Model 1 was selected as the final model because it demonstrated superior performance across key metrics. By including ward-level effects, it effectively captured geographic differences in speeding behavior, making it the most suitable choice.
+
+## Model Validation and Diagnostics
+
+### Performance Metrics
+
+The RMSE for Model 1 was 7.01, indicating that, on average, predictions deviated from observed values by this amount. MAE was 4.77, highlighting its precision in predicting over-speeding behavior. The \( R^2 \) value of 0.176 showed that the model explained 17.6% of the variance in over-speeding behavior, providing a reasonable level of explanatory power for the observed data.
+
+### Residual Diagnostics
+
+Residual diagnostics confirmed the validity of Model 1. The residual standard error of 7.37 aligned closely with the RMSE, reinforcing the model’s accuracy. Residual plots exhibited no systematic patterns, supporting the assumption of linearity. Additionally, homoscedasticity was verified, indicating consistent variance in residuals across predictions.
+
+## Diagnostic Checks and Model Justification
+
+Variance Inflation Factors (VIFs) were calculated to evaluate multicollinearity, with all variables in Model 1 displaying acceptable values below 4. Although Model 3 included Camera Identifiers, this variable was statistically insignificant and did not enhance model performance. Model 1 effectively balanced complexity and accuracy, integrating ward-level effects to provide valuable insights into over-speeding behavior while maintaining interpretability. Consequently, Model 1 was selected as the final model.
+
+
 # Results {#sec-myresults}
+
 
 # Discussion {#sec-mydisc}
 

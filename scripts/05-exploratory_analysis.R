@@ -82,6 +82,28 @@ ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_speeding, fill 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
                                      
 
+# Summarize over speeding by ward
+ward_speeding_summary <- final_filtered_data %>%
+  group_by(ward_no) %>%
+  summarize(
+    total_over_speeding = sum(over_speed_limit > 0, na.rm = TRUE),
+    avg_over_speeding = mean(over_speed_limit[over_speed_limit > 0], na.rm = TRUE)
+  )
+
+# Plot total over speeding by ward
+ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_over_speeding, fill = total_over_speeding)) +
+  geom_col() +
+  scale_fill_gradient(low = "yellow", high = "red") +
+  labs(
+    title = "Number of Vehicles Exceeding Speed Limits by Ward",
+    x = "Ward Number",
+    y = "Total Over Speeding Incidents",
+    fill = "Over Speeding Volume"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 # Interactive map of speeding incidents
 leaflet(final_filtered_data %>% filter(speeding == 1)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
