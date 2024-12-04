@@ -3,7 +3,7 @@
 # Author: Karen Riani
 # Date: 1 December 2024
 # Contact: karen.riani@mail.utoronto.ca
-# Pre-requisites: Need to have downloaded the data in 01-dornload_data.R script
+# Pre-requisites: Need to have downloaded the data in 01-download_data.R script
 # Any other information needed? Camera-related variables, such as camera density or proximity, were not included in the main data-cleaning pipeline as they were found to be highly correlated with ward_no due to the spatial join process. These variables are explored separately in the model and exploratory analysis scripts to assess their utility
 
 #### Workspace setup ####
