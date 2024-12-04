@@ -33,7 +33,7 @@ The **School Safety Zone: Watch Your Speed Program Detailed Speed Counts** datas
    - The step `## Step 3: Combine CSV Files ##` includes the necessary code for combining the files using `map_dfr()`.
 
 3. **Repository Constraints**:
-   - Due to file size constraints, the combined dataset is not stored in this repository under data/raw_data. Users must generate it locally by running the provided script.
+   - Due to file size constraints, the combined dataset and detailed speed counts zip file are not stored in this repository under data/raw_data. Users must generate it locally by running the provided script.
    
 ## Statement on LLM usage
 
