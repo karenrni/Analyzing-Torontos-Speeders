@@ -11,7 +11,6 @@ library(tidyverse)
 library(tidymodels)
 library(arrow)
 library(rstanarm)
-library(pROC)
 
 # Load the cleaned dataset
 final_filtered_data <- arrow::read_parquet("data/analysis_data/analysis_data.parquet")
