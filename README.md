@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project analyzes extreme speeding patterns around schools and traffic cameras in Toronto using data from the [School Safety Zone Watch Your Speed Program data](https://open.toronto.ca/dataset/school-safety-zone-watch-your-speed-program-locations/), [Watch Your Speed Detailed Counts data](https://open.toronto.ca/dataset/school-safety-zone-watch-your-speed-program-detailed-speed-counts/) and [Traffic Camera dataset](https://open.toronto.ca/dataset/traffic-cameras/). By visualizing speeding hotspots and identifying trends, this study aims to highlight areas with frequent violations and discuss the implications for road safety and enforcement strategies. The project also explores whether traffic calming measures or enforcement zones effectively reduce extreme speeding incidents around school zones.
+This project analyzes speeding patterns around schools and traffic cameras in Toronto using data from the [School Safety Zone Watch Your Speed Program data](https://open.toronto.ca/dataset/school-safety-zone-watch-your-speed-program-locations/), [Watch Your Speed Detailed Counts data](https://open.toronto.ca/dataset/school-safety-zone-watch-your-speed-program-detailed-speed-counts/) and [Traffic Camera dataset](https://open.toronto.ca/dataset/traffic-cameras/). By visualizing speeding hotspots and identifying trends, this study aims to highlight areas with frequent violations and discuss the implications for road safety and enforcement strategies. The project also explores whether traffic calming measures effectively reduce extreme speeding incidents around school zones.
 
 
 ## File Structure
