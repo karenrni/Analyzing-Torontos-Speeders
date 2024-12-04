@@ -1,4 +1,4 @@
-# Tracking Speed Demons: Exploring Excessive Speeding Near Traffic Cameras in Toronto School Zones
+# Exploring Speeding Near Traffic Cameras in Toronto School Zones
 
 ## Overview
 
