@@ -16,6 +16,8 @@ The repository is organized as follows:
 - `paper`: contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper.
 - `scripts`: Contains the R scripts used to simulate, download, clean, test, analyze and model the data.
 
+## Interactive Map of Speeding Events Near Schools
+Please see [here](https://karenrni.github.io/leaflet-web-map/)
 ## Data Reproducibility
 
 Due to a known issue of tibble_error_incompatible_size in the column lengths in the topics and formats fields from the opendatatoronto package, the dataset could not be directly downloaded via the API during the project timeline. Alternatively, downloads are available directly from OpenDataToronto's website link.
