@@ -1,12 +1,12 @@
 ---
-title: "Chasing Speed Demons: Analyzing Toronto’s Speeding Hotspots and Enforcement Gaps”"
-subtitle: "My subtitle if needed"
+title: "Chasing Speeders: Analyzing Toronto’s 2023 Speeding Trends in School Zones”"
+subtitle: "Volume Versus Speed Limits: 0.12 km/h Declines That Add Up Across School-Traffic Zones"
 author: 
   - Karen Riani
 thanks: "Code and data are available at: https://github.com/karenrni/Analyzing-Torontos-Speeders/."
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This study investigates over-speeding in Toronto, defined as the amount by which vehicles exceed posted speed limits, using data from the city's School Safety Zone Watch Your Speed Program and Traffic Camera datasets. A multi-linear regression analysis revealed key drivers of speeding behavior: higher traffic volumes reduce over-speeding by 0.12 km/h per additional vehicle, while increasing speed limits correlate with a 0.13 km/h rise in excess speed per km/h limit increase. Geographic variability was significant, with Ward 4 showing a 4.8 km/h reduction in over-speeding compared to the reference ward. Despite these findings, the negligible impact of speed cameras highlights limitations in existing enforcement data. These insights underscore the importance of nuanced, data-driven approaches to traffic management and policy development in urban settings."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -22,8 +22,13 @@ fig_caption: yes
 library(tidyverse)
 library(arrow)
 library(kableExtra)
+library(modelsummary)
+library(knitr)
+library(here)
+
 
 final_filtered_data <- read_parquet("../data/analysis_data/analysis_data.parquet")
+model1 <- readRDS("../models/first_model.rds")
 
 
 ```
@@ -35,7 +40,7 @@ Toronto's battle against speeding takes some wild turns—literally and figurati
 
 The rise of advanced vehicle technology and the adrenaline appeal of street racing exacerbate these issues, with young male drivers (18–25 years) disproportionately represented in this trend. Though rare at **0.9% prevalence**, street racing poses a **five-fold increase in crash risk (OR = 5.23, p < .001)**, even after accounting for other risk factors [@simonsmorton2017]. Despite Ontario’s strict penalties, such as **$10,000 fines** and **30-day license suspensions for excessive speeding**, enforcement alone has not fully addressed these challenges [@trafficparalegal2024]. Recent headlines, such as a driver clocked at **102 km/h in a 50 km/h school zone** and a Toronto speed camera being destroyed less than 24 hours after reinstallation, underscore the disconnect between enforcement measures and public behavior [@citynews2024; @cbc2023].
 
-This paper focuses on understanding the estimand **over_speed_limit**, the amount by which speeds in each observed speed bin exceed the posted speed limit. This dependent variable is calculated as the difference between the lower bound of the observed speed bin and the speed limit, ensuring a straightforward measure of speeding severity. By quantifying how far drivers exceed the limit, over_speed_limit allows for identifying patterns of high-risk speeding behaviour. Using open data from Toronto's School Safety Zone Watch Your Speed Program, Watch Your Speed Detailed Counts, and Traffic Camera datasets, including vehicle counts (volume) in each speed bin, speed limits, and ward-level identifiers, this study investigates how traffic patterns, enforcement mechanisms, and geographic factors contribute to variations in speeding behaviour across the city.
+This paper focuses on understanding the estimand **over_speed_limit**, the amount by which speeds in each observed speed bin exceed the posted speed limit in 2023. This dependent variable is calculated as the difference between the lower bound of the observed speed bin and the speed limit, ensuring a straightforward measure of speeding severity. By quantifying how far drivers exceed the limit, over_speed_limit allows for identifying patterns of high-risk speeding behaviour. Using open data from Toronto's School Safety Zone Watch Your Speed Program, Watch Your Speed Detailed Counts, and Traffic Camera datasets, including vehicle counts (volume) in each speed bin, speed limits, and ward-level identifiers, this study investigates how traffic patterns, enforcement mechanisms, and geographic factors contribute to variations in speeding behaviour across the city.
 
 To address this, the study employs multi-linear regression models to examine the relationship between excess speed and predictors such as traffic volume, speed limits, and ward characteristics throughout 2023. Results indicate that higher traffic volume reduces excess speed by **0.12 km/h per additional vehicle**, while speed limits positively influence speeding by **0.13 km/h per unit increase**. Wards exhibit substantial variability, with some, such as Ward 4, showing significant decreases in speeding. However, the impact of individual speed cameras was negligible, suggesting limitations in the data and methodology for evaluating camera-specific effects.
 
@@ -49,13 +54,13 @@ The rest of this paper is structured as follows:  @sec-mydatasection presents th
 The data for this analysis is sourced from Open Data Toronto [@opendatatoronto] and comprises three datasets: School Safety Zone Watch Your Speed Program – Locations [@schoolzonelocations], School Safety Zone Watch Your Speed Program – Detailed Speed Counts in 2023 [@schoolzonespeeds], and the Traffic Camera dataset  [@trafficcameras]. These datasets provide detailed insights into speeding behavior, traffic enforcement mechanisms, and geographic characteristics within Toronto. The traffic camera and speed sign data were merged through a spacial join with a range of 500m using geographical coordinates. This was joined with the detailed counts of speeds through Toronto ward number (25 ward structure). 
 
 ## Packages Used
-The analysis utilized R [@citeR] with the following packages: `opendatatoronto` [@opendatatoronto], `tidyverse` [@tidyverse], `janitor` [@janitor], `arrow` [@arrow], `readr` [@readr], `sf` [@sfpackage], `testthat` [@testthat], `ggplot2` [@ggplot2_wickham_2016], `corrplot` [@corrplot], `tidymodels` [@tidymodels], `kableExtra` [@kableExtra] and `rstanarm` [@rstanarm].
+The analysis utilized R [@citeR] with the following packages: `opendatatoronto` [@opendatatoronto], `tidyverse` [@tidyverse], `janitor` [@janitor], `arrow` [@arrow], `readr` [@readr], `sf` [@sfpackage], `testthat` [@testthat], `ggplot2` [@ggplot2_wickham_2016], `corrplot` [@corrplot], `tidymodels` [@tidymodels], `modelsummary` [@modelsummary], `kableExtra` [@kableExtra] and `rstanarm` [@rstanarm].
 
 ## Measurement 
 
 The datasets from Open Data Toronto serve as the foundation for analyzing speeding behavior in Toronto. Each variable is derived from real-world phenomena and represents a specific aspect of traffic patterns or enforcement mechanisms:
 
-- **Over Speed Limit**: This key dependent variable quantifies the extent to which drivers exceed posted speed limits. It is derived by calculating the difference between the midpoint of the observed speed bin (e.g., `[45,50)` translates to a midpoint of 47.5 km/h) and the posted speed limit. This method provides a nuanced measure of speeding severity, distinguishing between minor infractions and extreme violations.
+- **Over Speed Limit**: This dependent variable quantifies the extent to which drivers exceed posted speed limits. It is derived by calculating the difference between the midpoint of the observed speed bin (e.g., `[45,50)` translates to a midpoint of 47.5 km/h) and the posted speed limit. This method provides a measure of speeding severity, distinguishing between minor infractions and extreme violations.
 
 - **Sign ID and Camera ID (X_id)**: These unique identifiers represent speed cameras and their locations, facilitating the mapping of speeding patterns to enforcement points. However, sign addresses may not always align precisely with camera placements, as discussed in the limitations section.
 
@@ -124,6 +129,8 @@ summary_data %>%
 #| label: fig-heatbar
 #| fig-cap: Number of Vehicles Exceeding Speed Limits by Ward
 #| echo: false
+#| message: false
+#| warning: false
 
 # Summarize over speeding by ward
 ward_speeding_summary <- final_filtered_data %>%
@@ -146,12 +153,14 @@ ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_over_speeding, 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+[fig-heatbar]  visualizes the total volume of over-speeding incidents across various wards. Ward 10 stands out prominently with the highest number of over-speeding incidents, exceeding 1,500, which may indicate unique characteristics such as higher traffic density or insufficient enforcement measures. Other wards, such as Wards 13 and 16, also show elevated levels of over-speeding but fall significantly behind Ward 10. 
 
 ```{r}
 #| label: fig-cam-dens
 #| fig-cap: Camera Density vs. Speeding Behavior
 #| echo: false
-
+#| message: false
+#| warning: false
 
 ### Explore camera density per ward
 camera_density <- final_filtered_data %>%
@@ -174,6 +183,8 @@ ggplot(ward_speed_analysis, aes(x = cameras_nearby, y = avg_speed_over_limit)) +
        y = "Average Speed Over Limit")
 
 ```
+The scatter plot in [fig-cam-dens] explores the relationship between the number of speed cameras nearby and the average speed over the limit across various wards. The slight downward trend, indicated by the fitted regression line, suggests a weak negative association between the number of cameras and over-speeding behavior. Specifically, as the number of cameras increases, the average speed over the limit tends to decrease, albeit marginally. However, the variability in average speed over the limit across wards with the same number of cameras highlights the potential influence of other ward-specific factors, such as enforcement policies or road design. 
+
 
 ```{r}
 #| label: fig-heatmap1
@@ -201,6 +212,8 @@ ggplot(heatmap_data, aes(x = factor(ward_no), y = over_speed_limit, fill = total
   )
 ```
 
+[@fig-heatmap1] provides a detailed visualization of speeding behavior across Toronto’s wards, showcasing the relationship between the extent of over-speeding (measured in km/h above the limit) and the total volume of vehicles recorded. Ward 10 stands out with the highest total speeding volume, concentrated in lower over-speeding categories (<40 km/h above the limit), indicating significant non-compliance with posted limits. Conversely, instances of extreme over-speeding (>50 km/h above the limit) are sparse but occur across wards 4, 13, and 25, highlighting potential hotspots for dangerous driving behavior. 
+
 # Model {#sec-mymodel}
 
 ## Overview
@@ -212,9 +225,9 @@ This section outlines the modeling process used to analyze over-speeding behavio
 
 Common Variables Across All Models:
 
-- Speed Limit (x₁): Posted speed limit at a given location.
+- Speed Limit: Posted speed limit at a given location.
 
-- Volume (x₂): Number of vehicles observed in a speed bin.
+- Volume: Number of vehicles observed in a speed bin.
 
 Model-Specific Variables:
 
@@ -222,29 +235,32 @@ Model-Specific Variables:
 
 - Model 2: Omits ward-level effects to focus solely on speed limits and vehicle volumes.
 
-- Model 3: Adds a camera identifier (Xₓᵢd) to examine the influence of specific camera locations on speeding patterns.
+- Model 3: Adds a camera identifier (X_id) to examine the influence of specific camera locations on speeding patterns.
 
 #### Model Formulations
 
 1. Model 1: Full Model with Ward-Level Effects
-   \[
-   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \sum_{j=1}^{13} \beta_{3j} \text{ward\_no}_j + \epsilon
-   \]
+
+\begin{align}
+\text{over\_speed\_limit}_i &= \beta_0 + \beta_1 \times \text{speed\_limit}_i + \beta_2 \times \text{volume}_i + \sum_{j=1}^{13} \beta_{3j} \times \text{ward\_no}_{ij} + \epsilon_i
+\end{align}
 
 2. Model 2: Excluding Ward-Level Effects
-   \[
-   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \epsilon
-   \]
 
-3. Model 3: Including Camera Identifiers
-   \[
-   y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \sum_{j=1}^{13} \beta_{3j} \text{ward\_no}_j + \beta_4 X_{id} + \epsilon
-   \]
+\begin{align}
+\text{over\_speed\_limit}_i &= \beta_0 + \beta_1 \times \text{speed\_limit}_i + \beta_2 \times \text{volume}_i + \epsilon_i
+\end{align}
+
+3. Model 3: Including Camera Identifiers (X_id)
+
+\begin{align}
+\text{over\_speed\_limit}_i &= \beta_0 + \beta_1 \times \text{speed\_limit}_i + \beta_2 \times \text{volume}_i + \sum_{j=1}^{13} \beta_{3j} \times \text{ward\_no}_{ij} + \beta_4 \times \text{X\_id}_i + \epsilon_i
+\end{align}
 
 
 ## Variable Selection and Final Model
 
-The selection process aimed to balance complexity and explanatory power. Ward-level effects were included to capture geographic variations, while Camera Identifiers were tested to evaluate their influence. Redundant variables were excluded to maintain simplicity. Model 1 was selected as the final model because it demonstrated superior performance across key metrics. By including ward-level effects, it effectively captured geographic differences in speeding behavior, making it the most suitable choice.
+The selection process aimed to balance complexity and explanatory power. Ward-level effects were included to capture geographic variations, while Camera Identifiers were tested to evaluate their influence. Redundant variables were excluded to maintain simplicity. Model 1 was selected as the final model because it demonstrated superior performance across validation metrics. By including ward-level effects, it effectively captured geographic differences in speeding behaviour, making it the most suitable choice.
 
 ## Model Validation and Diagnostics
 
@@ -254,7 +270,7 @@ The RMSE for Model 1 was 7.01, indicating that, on average, predictions deviated
 
 ### Residual Diagnostics
 
-Residual diagnostics confirmed the validity of Model 1. The residual standard error of 7.37 aligned closely with the RMSE, reinforcing the model’s accuracy. Residual plots exhibited no systematic patterns, supporting the assumption of linearity. Additionally, homoscedasticity was verified, indicating consistent variance in residuals across predictions.
+Residual diagnostics confirmed the validity of Model 1. The residual standard error of 7.37 aligned closely with the RMSE, reinforcing the model’s accuracy. Residual plots exhibited no systematic patterns, supporting the assumption of linearity. Additionally, homoscedasticity was verified, indicating consistent variance in residuals across predictions. Please see [@fig-residuals] in the appendix for a detailed graph. 
 
 ## Diagnostic Checks and Model Justification
 
@@ -263,20 +279,121 @@ Variance Inflation Factors (VIFs) were calculated to evaluate multicollinearity,
 
 # Results {#sec-myresults}
 
+## Model Summary Statistics
+The analysis examined over-speeding, defined as the amount (in km/h) by which vehicles exceeded the posted speed limit. In [@tbl-model-results], shows the variation in speeding effects for model 1, including the ward number, speed limit, and volume among other metrics.
+
+#### Analysis of Over-Speeding Behavior
+For every 1 km/h increase in the posted speed limit, the predicted over-speeding increased by 0.13 km/h, reflecting a slight inclination for drivers to exceed limits more on roads with higher speed thresholds. Traffic volume also played a role, with each additional vehicle in the observed volume leading to a decrease in over-speeding by 0.12 km/h. This suggests that heavier traffic may act as a natural deterrent to excessive speeding.
+
+Ward-level differences were also observed, with Ward 2 serving as the reference category. Ward 4, known for its high-speed enforcement on Parkside Drive, showed a reduction of 4.84 km/h in over-speeding compared to Ward 2. Larger reductions were observed in Ward 20 (10.84 km/h) and Ward 14 (11.22 km/h). Conversely, Ward 12 displayed an increase of 4.15 km/h, indicating that over-speeding was more prevalent in this area.
+
+#### Performance Statistics
+The model's residual standard error was 7.36 km/h, indicating the average deviation of predictions from observed speeding levels. This was supported by an RMSE of 7.36. A relative RMSE of 10.51% of the observed range and 32.91% of the standard deviation indicates moderate predictive accuracy. While it suggests the model captures a portion of the variability, the error may be considered substantial given the dataset's complexity. For urban traffic behavior, this level of error isn't ideal but isn't unexpected due to high variability and unobserved factors influencing over-speeding.
+
+The \(R^2\) value of 0.176 and adjusted \(R^2\) of 0.175 show that the model explains approximately 17.6% of the variance in over-speeding. Although relatively modest, this reflects the challenge of modeling complex urban traffic behaviors with diverse contributing factors.
+
+#### Statistical Fit Metrics
+With an AIC of 99,722.4 and a BIC of 99,851.4, the model, these values are consistent with the dataset's size, being 14,594 observations.The model's F-statistic of 207.459 shows the statistical significance of the predictors in explaining variations in over-speeding. This shows that the inclusion of speed limits, traffic volume, and ward-level effects contributes significantly to the model’s explanatory power.
+
+
+```{r}
+#| label: tbl-model-results
+#| tbl-cap: Summary of Regression Estimates for Model 1
+#| echo: false
+
+modelsummary(
+  list("Model 1" = model1),
+  fmt = 3,  # Number of decimals
+  gof_omit = ".*"  # Omit extra goodness-of-fit statistics if necessary
+)
+
+```
+
+## Relationship Between predicted and observed over-speeding values
+
+```{r}
+#| label: fig-observed-vs-predicted
+#| fig-cap: "Observed vs. Predicted Over-Speeding: Model Accuracy Visualization"
+
+knitr::include_graphics(here("other", "graphs", "predObsv.png"))
+
+
+
+```
+
+[@fig-observed-vs-predicted] shows the relationship between predicted and observed over-speeding values. Predicted values align reasonably well with observed values at lower ranges (0–10 km/h). This indicates that the model performs adequately in capturing moderate over-speeding behaviors, where most of the data points fall close to the red dashed line representing perfect predictions. 
+
+### Underestimation of Higher Values
+For observed over-speeding values exceeding 20 km/h, the model consistently underestimates. Predicted values do not reach the observed extremes, suggesting that the model has difficulty accounting for the variability or extremity of high over-speeding incidents. This limitation is evident from the lack of points in the higher range of the dashed line.
+
+### Clustering at Lower Speeds
+There is a noticeable clustering of predictions around 0–10 km/h, even for observed over-speeding values as high as 40 km/h. This clustering suggests the model's predictions are conservative, failing to differentiate effectively between moderate and extreme over-speeding cases.
+
+While the model provides reasonable predictions for average over-speeding behaviors, its performance diminishes at higher observed values, indicating potential limitations in its ability to capture outliers or extreme behaviors.
+
+## Average Predicted Over-Speeding by Ward
+```{r}
+#| label: fig-ward-predictions
+#| fig-cap: Predicted Over-Speed Limit by Ward
+#| echo: false
+
+knitr::include_graphics(here("other", "graphs", "heatbarfigure.png"))
+
+
+```
+[@Fig-ward-predictions] shows the average predicted over-speeding across Toronto wards, measured in kilometers per hour. 
+
+### Distribution of Predictions Across Wards
+Ward 12 exhibits the highest predicted over-speeding value, with an average of approximately 12.5 km/h over the speed limit. This value is notably higher compared to other wards, highlighting Ward 12 as a potential outlier. Similarly, Ward 25 follows closely with an average predicted over-speeding of about 11 km/h, suggesting consistently elevated predictions in these areas.
+
+### Wards with Lower Predictions
+In contrast, Wards 5, 21, and 20 show substantially lower predicted over-speeding values, averaging below 3 km/h. These results suggest that predicted over-speeding behaviors are less prominent in these wards, potentially influenced by traffic conditions, enforcement presence, or other unobserved factors.
+
+#### Implications of Predictions
+While the predictions align with observed patterns in some wards, such as higher over-speeding in Ward 12, the variability across wards suggests that spatial characteristics may play a significant role. These predictions provide a baseline understanding of over-speeding behavior at a ward level.
 
 # Discussion {#sec-mydisc}
 
-## First discussion point {#sec-first-point}
+## Ward-Level Disparities in Over-Speeding
+The results show geographical disparities in over-speeding across Toronto. For instance, Ward 12 emerges as a statistical outlier, with an average predicted over-speeding of 12.5 km/h. In  contrast, Ward 5 shows much lower predictions, averaging less than 3 km/h. This stark difference raises questions about factors such as road design, traffic enforcement, and even demographic variations. Ward 12 may be plagued by wide arterial roads inviting speed or does has outdated enforcement options. The low over-speeding in Ward 5 may hint at effective urban planning or stronger enforcement presence. It’s clear that “where” you drive in Toronto heavily influences “how” you drive. However, wards span cities in the 25 Ward model, and generalizing spaces of this size may also look over more specific area data.
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+Ward 4, which includes Parkside Drive—Toronto's most-ticketed location for speeding [@cbc2023], exhibited an intriguing pattern. Despite its reputation for dangerous speeding and expected dominance in over all speeding, the model indicated that over-speeding in Ward 4 was, on average, 4.77 km/h lower than the reference Ward 2. This discrepancy suggests the effectiveness of enforcement measures or specific traffic conditions in mitigating speeding behavior. 
 
-## Second discussion point
+## Cameras
+While traffic cameras are often touted as a primary deterrent for speeding, their impact appears muted in the exploratory analysis. The inclusion of camera identifiers in regression model 3 did little to improve predictive accuracy, with the variable itself showing no statistical significance. Even the relationship between the number of cameras nearby and over-speeding is weak, challenging the assumption that simply adding cameras will curb speeding. Drivers may simply be accustomed to their presence or camera density may be too low to create a broader decreasing effect.
 
-## Third discussion point
+## Volume of Speeds
+Surprisingly, higher traffic volumes seem to correlate with lower over-speeding rates. The consistently negative coefficient for volume across all models suggests that when more vehicles are on the road at any speed, the likelihood of speeding diminishes. One possible explanation is that congestion creates natural constraints, limiting a driver’s ability to exceed the speed limit alongside the speed of their drivers around them.
 
-# Weaknesses and next steps {#sec-mylimits}
+## Outliers 
+The scatterplot of predicted vs. observed over-speeding values in [@fig-ward-predictions] reveals areas where the model struggles, particularly with extreme outliers. Predictions for high over-speeding values (e.g., above 40 km/h) are generally underrepresented, while predictions cluster heavily near lower values. This suggests the model may be oversimplifying the dynamics of extreme over-speeding events, which likely involve additional, unmeasured factors like driver behavior or road conditions. Additionally, the residual errors in [@fig-residuals] highlight slight over-predictions for certain wards, hinting at potential biases in how ward-level effects were estimated.
 
-Weaknesses and next steps should also be included.
+# Limitations and Next Steps {#sec-mylimits}
+
+## Weaknesses and Limitations
+
+### Data and Method Limitations
+The analysis does not account for date and time-specific patterns. Over-speeding frequently occurs during night hours or non-peak times when roads are less congested and school zone speeds only ooperate between 8 AM and 5 PM. Additionally, it is unclear whether the speed signs are specifically tracking school zone speeds or normal speeds. Some speed cameras included in the dataset were taken down partway through 2023, but they were retained in the analysis as long as they existed at any point during the year. While this decision did not significantly affect results, it did not clearly reflect temporal changes in camera presence.
+
+The School Safety Zone Watch Your Speed Program sensors may occasionally track outliers such as ambulances or police vehicles, leading to exaggerated over-speeding measurements. Additionally, these systems do not log vehicle types, which could have provided more support into driving patterns. The analysis assumes that vehicles maintain a constant speed through the sensor area, which may not reflect real-world driving behaviour. Traffic patterns can be complex and consequently difficult to accurately model. The multi-linear regression model used could benefit from more layered or bayesian models and uncertainty handling. 
+
+A major assumption in the modeling process is the uniform distribution of speeds within speed bins. However, this may not reflect real-world conditions, where driver behavior often skews towards certain thresholds (e.g., staying just below enforcement limits). Similarly, this analysis aimed to examine trends in speeding around schools near traffic cameras, however it lacks in tracking speed demons and focuses on all speeds above the limit.
+
+### Geographic and Spatial Considerations
+
+Research suggests that proximity to schools and intersections significantly influences traffic flow. For instance, vehicle delays decrease when schools are located at least 400 meters from intersections [@mdpi2022]. This analysis did not explicitly track specific spatial relationships and specific distances. Determining an appropriate spatial threshold for evaluating enforcement was solely based on the 400m reference. More research may be required to determine the adequacy of a 400-500m proximity. Furthermore, the School Safety Zone Watch Your Speed Program – Detailed Speed Counts dataset is over 12 months behind its refresh rate, limiting its applicability to current traffic conditions. 
+
+
+## Next Steps and recommendations
+
+Future models could include weather data, as adverse conditions (e.g., rain, snow) are known to impact driving behavior. Open Data Toronto provides weather datasets that could be merged with speeding metrics for more comprehensive analyses, if joins are possible. Furthermore, considering the time of speed logging may improve and further detail the analysis, as speeding increases towards the peak hours and the night time [@nightSpeed] and it would better align with Toronto school zone speed laws from 8am-5pm. 
+
+Although camera density was weakly correlated with over-speeding, as seen in the exploratory analysis, further research could evaluate enforcement alternatives, such as dynamic speed limits or enhanced police presence. This might also involve examining specific ticketing data to identify where enforcement is most effective. More detailed data including areas outside of school zones can offer a proper comparison to trends in current data exclusive to school zones. Camera-related variables were excluded from the final models due to multicollinearity. Addressing this with larger datasets or alternative feature engineering techniques may help retain these variables in future models while improving interpretability.
+
+Incorporating data on vehicle types could help identify whether certain vehicles (e.g., trucks, commercial vehicles) contribute disproportionately to over-speeding. Modified cars tend to speed at greater velocity and more often than others [@], offering additional insights into driver behaviour. Furthermore, there has been evidence that increases in vehicle height also correlate with speeding, as vehicle height may affect drivers' speed perception [@height].
+
+As speeding trends can vary greatly over time, addtional analysis spanning over several years can further support driver trends and behaviour. For example, speeding increased during the pandemic, likely due to the significant decrease in cars on the road, offering more leeway for speeding [@pandemic]. Having a stronger focus on speed demons may be of interest, as tracking driver behaviour of those who minimally speed may not be as telling of general speeder habits. 
+
 
 \newpage
 
@@ -284,129 +401,81 @@ Weaknesses and next steps should also be included.
 
 # Appendix {-}
 
-If you're incorporating feedback to diversify question types and address previous gaps, here’s an improved version of your appendix for Toronto's speeding analysis with a reasonable budget. I'll also ensure it reflects insights from your earlier examples and feedback while incorporating poll aggregation and methodology details.
-
----
-
-# Idealized Survey & Methodology - $500K Budget {#sec-ideal-surv}
+# Idealized Survey & Methodology {#sec-ideal-surv}
 
 ## Overview
-This appendix outlines a survey methodology designed to enrich the analysis of excessive speeding near Toronto school zones. With a $500K budget, this approach aims to gather nuanced data from drivers, pedestrians, and community members about speeding behaviors, awareness of enforcement measures, and perceived safety. By integrating observational data with survey insights, this methodology enables robust analysis and informed policy recommendations.
-
----
+This appendix outlines a survey methodology designed to improve the analysis of excessive speeding near Toronto school zones. With a $500K budget, this approach aims to gather data from drivers, pedestrians, and community members about speeding behaviours, awareness of enforcement measures, and perceived safety. By joining observational data with survey insights, this methodology aims to improve analysis and informed policy recommendations.
 
 ## Budget Justification
-# Overview
 
-A $500,000 budget is proposed for analyzing speeding trends in Toronto school zones. Based on similar city-wide traffic safety initiatives, such as Vision Zero and speed enforcement studies, this budget is allocated to account for:
+Vision Zero’s annual budget for public engagement and data-driven initiatives often ranges between 1-2 million, justifying a scaled-down 500K budget for this specific study.Based on this similar city-wide traffic safety initiatives the $500K is allocated to account for:
 
-Comprehensive sampling: Targeting diverse demographics and road users.
+- Comprehensive sampling (targeting diverse demographics and road users).
 
-Advanced recruitment and incentives: Ensuring adequate participation.
+- Advanced recruitment and incentivization strategies to ensure adequate participation.
 
-High-quality data integration: Focused on cleaning, validation, and geospatial analysis.
-
-# Proportionality
-
-Vision Zero allocates $250,000 to $1,000,000 for focused safety measures annually, making $500,000 appropriate for a targeted study [@citytoronto2024].
-
-# Survey Costs
-
-Recruiting diverse participants typically costs $200,000 to $300,000, ensuring robust and representative data [@pew2023].
-
----
+- High-quality data cleaning, validation, and geospatial integration.
 
 ## Sampling Approach
-### **Target Groups**
-1. **Drivers:**  
-   - Key demographic: Ages 18-40, with emphasis on young male drivers.
-   - Behavioral patterns: Frequent commuters in school zones.
 
-2. **Pedestrians:**  
-   - Parents, school staff, and local residents.
+### Target Groups
 
-3. **Community Advocates:**  
-   - Stakeholders involved in traffic safety initiatives.
+**Drivers:**  
+- Demographic: Ages 18-40, with emphasis on young male drivers.  
 
-### **Sampling Method**
-**Multi-Stage Sampling:**
-1. **Stratification by Wards:**  
-   - Ensure geographic coverage across all Toronto wards with school zones.  
-2. **Cluster Sampling:**  
-   - Focus on areas near speed cameras and school safety zones.  
-3. **Random Sampling:**  
-   - Within clusters, randomly select participants for unbiased representation.  
+- Behavioral patterns: Frequent commuters in school zones.
+
+**Pedestrians:**  
+- Parents, school staff, and local residents.
+
+**Community Advocates:**  
+- Stakeholders involved in traffic safety initiatives.
+
+### Sampling Method
+
+**Multi-Stage Sampling:**  
+- **Stratification by Wards:** Ensure geographic coverage across all Toronto wards with school zones.  
+- **Cluster Sampling:** Focus on areas near speed cameras and school safety zones.  
+- **Random Sampling:** Within clusters, randomly select participants for unbiased representation.  
 
 **Sample Size Goal:**  
-- **3,000 respondents**: Sufficient to identify trends at the ward level while maintaining a margin of error below ±2%.
+3,000 respondents: Sufficient to identify trends at the ward level while maintaining a margin of error below ±2%.
 
----
+## Recruitment and Incentives
 
-## Recruitment Strategy
-### **Primary Channels**
-1. **Online Ads:**  
-   - Platforms: TikTok, Instagram, and YouTube.
-   - Geo-targeted to school zones and high-traffic areas.
-   - Budget Allocation: $150,000.
+### Recruitment Channels
+- **Digital Advertising:** Ads targeted toward young men, particularly those who frequent car meetups or automotive social media groups. Ads will use neutral language like "Toronto Traffic Safety Study" to avoid framing biases.  
+  **Allocated Budget:** $200,000.  
+- **Community Partnerships:** Collaborations with schools, PTAs, and driving schools to involve families and new drivers.  
+  **Allocated Budget:** $50,000.
 
-2. **On-the-Ground Recruitment:**  
-   - Flyers distributed in school zones, community centers, and traffic courts.
-   - Budget Allocation: $50,000.
+### Incentives
+- A raffle for ten $50 gift cards to encourage participation.  
+- Highlighting confidentiality ensures respondents feel safe sharing honest information.
 
-3. **Partnerships with Apps:**  
-   - Collaboration with navigation tools like Waze to deliver in-app survey prompts.
-   - Budget Allocation: $100,000.
+### Behavioral Targeting
+Beyond demographic data, the recruitment strategy will aim to identify drivers who:
 
-4. **Incentives:**  
-   - Monetary rewards: $20 gift cards for completion, with a chance to win larger prizes.
-   - Budget Allocation: $100,000.
+- Drive frequently during peak hours near school zones.
 
----
+- Own or lease modified vehicles.
 
-## Survey Design
+- Exhibit risky behaviors, such as speeding or tailgating, based on self-reporting and survey insights.
 
-### Diversified Question Types
-To address the feedback, the survey incorporates **varied question formats**:
+- Young males (18–34), a group overrepresented in speeding violations [@transportcanada2019].
 
-1. **Multiple Choice:**  
-   - Example: "What factors most influence your speed in school zones?"
-     - Time pressure.
-     - Peer behavior.
-     - Lack of awareness of speed limits.
-     - Others.
+- Drivers who own modified cars, as these factors are linked to increased risk of speeding [@safetyresearch2018].
 
-2. **Likert Scales:**  
-   - Example: "Rate your agreement with: 'Speed cameras make me feel safer in school zones.'"
-     - Strongly disagree to strongly agree.
+## Bias Mitigation
 
-3. **Open-Ended:**  
-   - Example: "What other measures would help reduce speeding in school zones?"
+1. **Survey Naming:** The neutral title **Toronto Traffic Safety Study** reduces response bias by framing the study as a general exploration of driver behavior rather than focusing on speeding.
+2. **Confidentiality Assurance:** Respondents are explicitly informed that:
+   - Data is anonymous and used solely for research purposes.
+   - Identifiable information (e.g., email for raffle entries) is stored separately.
+3. **Question Design:** Questions are carefully ordered to build trust, with sensitive topics (e.g., fastest speed driven) placed later in the survey.
+4. **Response Validation:** Attention-check questions ensure participant engagement and accuracy.
 
-4. **Ranking Questions:**  
-   - Example: "Rank the following in order of their effectiveness at reducing speeding: speed cameras, visible signage, increased fines, police presence."
 
-5. **Interactive Scenario Questions:**  
-   - Example: "If you saw a speed camera sign but no visible camera, how likely are you to still speed? (Very unlikely to very likely)."
-
----
-
-### Survey Flow
-1. **Introduction and Consent:**  
-   - Explain the purpose, time required (5-7 minutes), and confidentiality.
-
-2. **Demographics:**  
-   - Age, gender, driving habits, and proximity to school zones.
-
-3. **Behavioral Insights:**  
-   - Driving patterns, awareness of speed limits, and interaction with enforcement measures.
-
-4. **Perceived Effectiveness:**  
-   - Opinions on speed cameras, signage, and enforcement presence.
-
-5. **Safety Concerns:**  
-   - Perceptions of safety in school zones and suggested improvements.
-
----
 
 ## Data Validation
 1. **Logic Checks:**  
@@ -425,52 +494,134 @@ To address the feedback, the survey incorporates **varied question formats**:
 A **poll-of-polls method** balances survey insights with observational data:
 - Weight survey responses by:
   - **Proximity to enforcement measures.**
+  
   - **Frequency of driving in school zones.**
+  
 - Integrate responses with speed count data to build predictive models of speeding behavior.
 
-### **Modeling Framework**
-- **Dependent Variable:** Likelihood of exceeding speed limits.  
-- **Predictors:**  
-  - Awareness of enforcement measures.  
-  - Demographics (age, gender).  
-  - Self-reported speeding behavior.  
-  - Proximity to cameras and speed signs.
-
-### **Diagnostics**
-- Residual analysis and goodness-of-fit tests to validate model performance.
-- Q-Q plots and distribution checks for robustness.
-
----
-
-## Budget Breakdown
-
-| **Expense**                     | **Cost Estimate (CAD)**  |
-|----------------------------------|--------------------------|
-| Social Media Recruitment        | $150,000                 |
-| In-App Ads and Recruitment      | $100,000                 |
-| On-the-Ground Recruitment       | $50,000                  |
-| Participant Incentives          | $100,000                 |
-| Data Cleaning and Validation    | $75,000                  |
-| Survey Design and Implementation| $25,000                  |
-| **Total**                       | **$500,000**             |
 
 ---
 
 ## Appendix Content
 1. **Survey Link:**  
-   [Insert Google Forms Link Here].
+   [https://forms.gle/TbRYwoGafy2EzwBQ9].
 
-2. **Copy of Survey Questions:**  
-   - Include all questions, organized by section.  
+2. **Full Survey Questions and Overview:**  
 
-3. **Model Diagnostics:**  
-   - Residual plots, fit comparisons, and distribution checks.  
+**Title:** Toronto Traffic Safety Study  
+**Purpose:** To study driver behavior near school zones.  
+**Estimated Time:** Less than 5 minutes.  
+**Confidentiality:** Responses are anonymous and used solely for research.  
+
+#### Section 1: Demographics and Background
+1. What is your age group?  
+   - Under 18  
+   - 18–24  
+   - 25–34  
+   - 35–44  
+   - 45–54  
+   - 55–64  
+   - 65+  
+
+2. What is your gender identity?  
+   - Male  
+   - Female  
+   - Non-binary  
+   - Prefer not to say  
+
+3. What is your primary occupation?  
+   - Full-time student  
+   - Part-time student  
+   - Employed full-time  
+   - Employed part-time  
+   - Unemployed  
+   - Retired  
+
+4. Do you currently own or lease a vehicle?  
+   - Yes, I own  
+   - Yes, I lease  
+   - No, I do not own or lease a car  
+
+5. How old is your primary vehicle?  
+   - Less than 1 year  
+   - 1–3 years  
+   - 4–6 years  
+   - 7–10 years  
+   - Over 10 years  
+
+#### Section 2: Driving Habits
+6. How often do you drive near schools in Toronto?  
+   - Daily  
+   - A few times a week  
+   - Rarely  
+   - Never  
+
+7. What time of day do you most often drive near school zones?  
+   - Morning (6 AM – 9 AM)  
+   - Afternoon (12 PM – 3 PM)  
+   - Evening (4 PM – 7 PM)  
+   - Late night (after 9 PM)  
+
+8. Do you typically drive alone or with others?  
+   - Alone  
+   - With friends or family  
+
+#### Section 3: Speeding and Safety
+9. What is the fastest you’ve ever driven (in km/h)? *(Select closest range)*  
+   - Below 80 km/h  
+   - 80–99 km/h  
+   - 100–120 km/h  
+   - Over 120 km/h  
+
+10. What do you consider a normal amount to speed over the limit (in km/h)? *(Select closest range)*  
+    - 0–5 km/h  
+    - 6–10 km/h  
+    - 11–20 km/h  
+    - 21+ km/h  
+
+11. Do you think there are valid reasons to speed? *(Open-ended)*  
+
+12. How likely are you to slow down when you see a speed camera or radar sign?  
+    - Always  
+    - Often  
+    - Sometimes  
+    - Rarely  
+    - Never  
+
+#### Section 4: Traffic Safety Knowledge
+13. **Test Question:** What is the legal speed limit near school zones in Toronto?  
+    - 30 km/h  
+    - 40 km/h  
+    - 50 km/h  
+    - I don’t know  
+
+#### Section 5: Traffic Incidents
+14. Have you ever been involved in a collision while driving?  
+    - Yes  
+    - No  
+
+15. If yes, what was the estimated damage?  
+    - Below $500  
+    - $500–$1,000  
+    - Over $1,000  
+
+#### Section 6: Raffle Entry
+16. Would you like to enter the raffle for a $50 gift card? *(Optional, email required)*  
+    - Yes (Enter email address)  
+    - No  
 
 ---
+# Residual Plot for model 1
 
-This improved version addresses the feedback, diversifies question types, and integrates poll aggregation and modeling. Let me know if you’d like refinements!
+```{r}
+#| label: fig-residuals
+#| fig-cap: Residuals vs. Fitted Values for Model 1
+#| echo: false
 
 
+knitr::include_graphics(here("other", "graphs", "residuals.png"))
+
+```
 \newpage
 
 
