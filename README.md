@@ -17,7 +17,7 @@ The repository is organized as follows:
 - `scripts`: Contains the R scripts used to simulate, download, clean, test, analyze and model the data.
 
 ## Interactive Map of Speeding Events Near Schools
-Please see [here](https://karenrni.github.io/leaflet-web-map/)
+An interactive Leaflet map was developed to visualize the locations of speeding incidents based on the speed cameras and Watch Your Speed signs using a 500-meter spatial join. This map provides an accessible view of enforcement coverage across Toronto, allowing users to explore geographic distributions and the density of speed enforcement infrastructure, as well as the speed limit, observed Speed (numeric midpoint of the speed bin), volume of incidents and ward number. Markers represent the locations of speed cameras and signs showing the spatial reach of current traffic safety measures in school areas. Please see [here](https://karenrni.github.io/leaflet-web-map/)
 ## Data Reproducibility
 
 Due to a known issue of tibble_error_incompatible_size in the column lengths in the topics and formats fields from the opendatatoronto package, the dataset could not be directly downloaded via the API during the project timeline. Alternatively, downloads are available directly from OpenDataToronto's website link.
