@@ -85,13 +85,15 @@ To address gaps, spatial joins were employed to map camera locations to speed ob
 
 
 ## Descriptive Statistics
-The descriptive statistics (see [@tbl-summary]) reveal important patterns within the dataset. The average over-speeding value is 3.91 km/h, with extreme cases reaching as high as 70 km/h, illustrating the range of speeding behavior observed. The median speed bin midpoint is 30 km/h, reflecting typical speed categories captured, while the mean traffic volume stands at 23.35 vehicles, indicating the density of traffic during observations. Geographic variables, including longitude and latitude, align closely with Toronto's urban core, emphasizing the city-centric focus of the analysis.
+The descriptive statistics in [@tbl-summary] reveal important patterns within the dataset. The average over-speeding value is 3.91 km/h, with extreme cases reaching as high as 70 km/h, illustrating the range of speeding behavior observed. The median speed bin midpoint is 30 km/h, reflecting typical speed categories captured, while the mean traffic volume stands at 23.35 vehicles, indicating the density of traffic during observations. Geographic variables, including longitude and latitude, align closely with Toronto's urban core, emphasizing the city-centric focus of the analysis.
 
 
 ```{r}
 #| label: tbl-summary
-#| fig-cap: Summary of Joined Analysis Data
+#| tbl-cap: Summary of Joined Analysis Data
 #| echo: false
+#| warning: false
+#| message: false
 
 # Prepare summary data
 summary_data <- data.frame(
@@ -107,7 +109,7 @@ summary_data <- data.frame(
 
 # Create a formatted table
 summary_data %>%
-  kbl(caption = "Summary Statistics for the Final Filtered Data") %>%
+  kbl() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE, 
                 position = "center") %>%
@@ -128,7 +130,8 @@ ward_speeding_summary <- final_filtered_data %>%
   group_by(ward_no) %>%
   summarize(
     total_over_speeding = sum(over_speed_limit > 0, na.rm = TRUE),
-    avg_over_speeding = mean(over_speed_limit[over_speed_limit > 0], na.rm = TRUE)
+    avg_over_speeding = mean(over_speed_limit[over_speed_limit > 0], na.rm = TRUE), 
+    .groups = "drop"
   )
 
 # Plot total over speeding by ward
@@ -145,7 +148,6 @@ ggplot(ward_speeding_summary, aes(x = factor(ward_no), y = total_over_speeding, 
 
 ```
 [@fig-heatbar]  visualizes the total volume of over-speeding incidents across various wards. Ward 10 stands out prominently with the highest number of over-speeding incidents, exceeding 1,500, which may indicate unique characteristics such as higher traffic density or insufficient enforcement measures. Other wards, such as Wards 13 and 16, also show elevated levels of over-speeding but fall significantly behind Ward 10. 
-
 ```{r}
 #| label: fig-cam-dens
 #| fig-cap: Camera Density vs. Speeding Behavior
@@ -181,7 +183,9 @@ The scatter plot in [@fig-cam-dens] explores the relationship between the number
 #| label: fig-heatmap1
 #| fig-cap: Speeding Volume by Ward and Over Speed Limit
 #| echo: false
-
+#| warning: false
+#| message: false
+#| 
 # Aggregate data for heatmap
 heatmap_data <- final_filtered_data %>%
   group_by(ward_no, over_speed_limit) %>%
@@ -204,6 +208,9 @@ ggplot(heatmap_data, aes(x = factor(ward_no), y = over_speed_limit, fill = total
 ```
 
 [@fig-heatmap1] provides a detailed visualization of speeding behaviour across Toronto’s wards, showcasing the relationship between the extent of over-speeding (measured in km/h above the limit) and the total volume of vehicles recorded. Ward 10 stands out with the highest total speeding volume, concentrated in lower over-speeding categories (<40 km/h above the limit), indicating significant non-compliance with posted limits. Conversely, instances of extreme over-speeding (>50 km/h above the limit) are sparse but occur across wards 4, 13, and 25, highlighting potential hotspots for dangerous driving behaviour. 
+
+## Interactive website
+An interactive Leaflet map was developed to visualize the locations of speed cameras and Watch Your Speed signs using a 500-meter spatial join. This map provides an accessible view of enforcement coverage across Toronto, allowing users to explore geographic distributions and the density of speed enforcement infrastructure. Markers represent the locations of speed cameras and signs showing the spatial reach of current traffic safety measures in school areas. Please see the website [here](https://karenrni.github.io/leaflet-web-map/).
 
 # Model {#sec-mymodel}
 
